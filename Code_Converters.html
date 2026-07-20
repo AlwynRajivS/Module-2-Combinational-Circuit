@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Code Converters — Complete Signal-Flow Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --amber:#f59e0b;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  --green:#48dda8; --x-color:#ffbd59;
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --amber:#d97706;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  --green:#0a9d70; --x-color:#c96a00;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:linear-gradient(var(--bg-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;background-position:center top;min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease)}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+header{position:relative;overflow:hidden;padding:38px 18px 30px;color:#fff;background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));background-size:220% 220%;animation:bgshift 12s ease infinite}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+.wrap,main{max-width:1200px;margin:auto}
+.head{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:50px;height:50px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff40;display:flex;align-items:center;justify-content:center;font-size:23px;backdrop-filter:blur(6px);box-shadow:0 0 24px #ffffff30;flex:none}
+.eyebrow{margin:0 0 3px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.88}
+h1{margin:0;font:700 clamp(24px,4vw,36px)/1.15 var(--font-display);letter-spacing:-.01em}
+header p.tagline{position:relative;line-height:1.7;opacity:.92;font-size:15px;max-width:840px;margin:16px 0 0}
+.theme-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);backdrop-filter:blur(6px);transition:.25s var(--ease)}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+.stat-row{position:relative;margin:20px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+.stat{padding:8px 13px;border-radius:999px;background:#ffffff1c;border:1px solid #ffffff35;font:600 12px/1 var(--font-mono);backdrop-filter:blur(6px)}
+
+.tabs{position:sticky;top:0;z-index:20;display:flex;gap:9px;overflow:auto;padding:12px;background:linear-gradient(var(--bg),var(--bg) 75%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+button{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);padding:11px 16px;border-radius:999px;font:600 13.5px/1 var(--font-display);cursor:pointer;white-space:nowrap;transition:.25s var(--ease);box-shadow:var(--shadow-sm)}
+button:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.tab.active,.bit.active{background:linear-gradient(120deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+.tab.active{transform:translateY(-2px)}
+.page{display:none}.page.active{display:block;animation:fade .45s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+main{padding:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin:15px 0;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);animation:cardIn .5s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.card h2{margin-top:0;font-family:var(--font-display);font-size:19px;border-left:5px solid var(--accent);padding-left:11px}
+.theory{line-height:1.8;color:var(--text-muted);font-size:14.5px}
+.theory b{color:var(--text)}
+.formula,.note,.result{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:12px;padding:13px;line-height:1.75}
+.formula{font-family:var(--font-mono);color:var(--text);font-size:14px}
+.note{border-left:5px solid var(--brand-b);color:var(--text-muted);font-size:14px}
+.result{background:linear-gradient(120deg,var(--brand-a),var(--brand-b));color:#fff;font-family:var(--font-mono);box-shadow:var(--shadow-sm)}
+.scroll{overflow:auto}
+.truth{width:100%;border-collapse:collapse;text-align:center;min-width:430px;font-family:var(--font-mono);font-size:13.5px}
+.truth th,.truth td{border:1px solid var(--border);padding:7px;transition:background .3s var(--ease)}
+.truth th{background:var(--surface-2);color:var(--text-muted)}
+.truth tr.live-row td{background:color-mix(in srgb, var(--accent) 20%, transparent);box-shadow:inset 0 0 0 2px var(--accent);font-weight:900}
+.eqsteps{display:grid;gap:8px;margin-top:10px}
+.eqstep{padding:11px 13px;border:1px solid var(--border-soft);border-radius:11px;background:var(--surface-2);color:var(--text-muted);line-height:1.65;font-size:14px}
+.eqstep b{color:var(--text)}
+.signal.on,.flowwire.on{stroke:var(--accent)!important;stroke-width:6!important;filter:drop-shadow(0 0 6px var(--accent))}
+.flowwire{transition:stroke .18s,filter .18s,stroke-width .18s}
+.dc{color:var(--x-color);font-weight:900}
+.kmaps{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:13px}
+.kbox{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:15px;padding:11px}
+.kbox h3{margin:0 0 8px;font:700 13.5px var(--font-mono);color:var(--text)}
+.km{width:100%;border-collapse:collapse;table-layout:fixed;text-align:center;font-family:var(--font-mono)}
+.km th,.km td{height:58px;border:1px solid var(--border);position:relative;color:var(--text-muted)}
+.km th{background:var(--surface);color:var(--text-faint);font-size:12px}
+.one{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--text);font-weight:800}
+.cellring{position:absolute;pointer-events:none;border-radius:11px}
+.r0{inset:3px;border:3px solid var(--accent)}
+.r1{inset:7px;border:3px solid var(--green)}
+.r2{inset:11px;border:3px solid #b88cff}
+.r3{inset:15px;border:3px solid #ff718f}
+.legend{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.legend span{border:2px solid;padding:4px 8px;border-radius:8px;font-size:11.5px;font-family:var(--font-mono);color:var(--text-muted)}
+.groups{font-size:13px;line-height:1.7;color:var(--text-muted)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.lamp{display:inline-block;border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin:2px;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--text-muted)}
+.lamp.on{background:linear-gradient(135deg,var(--green),#22c55e);color:#03251b;border-color:transparent;box-shadow:0 0 12px color-mix(in srgb, var(--green) 55%, transparent)}
+.diagram{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:8px;overflow:auto}
+.diagram svg{display:block;width:100%;min-width:700px;height:auto}
+.gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.6}
+.wire{fill:none;stroke:var(--wire-off);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.txt{fill:var(--ink);font:700 15px var(--font-mono)}
+.small{fill:var(--text-faint);font:700 11px var(--font-mono)}
+
+.fabs{position:fixed;right:18px;bottom:18px;z-index:50}
+.fab{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;box-shadow:var(--shadow);transition:.25s var(--ease);opacity:0;transform:translateY(10px) scale(.9);pointer-events:none}
+.fab.show{opacity:1;transform:none;pointer-events:auto}
+.fab:hover{transform:translateY(-3px) scale(1.05);border-color:var(--accent)}
+
+footer{max-width:1200px;margin:10px auto 0;padding:24px 18px 44px;text-align:center;color:var(--text-faint);font-size:13px;border-top:1px solid var(--border-soft)}
+
+@media(max-width:600px){
+  .card{padding:12px;border-radius:16px}
+  .kmaps{grid-template-columns:1fr}
+  .diagram svg{min-width:640px}
+  .txt{font-size:12px}
+  .small{font-size:9px}
+  header{padding:26px 16px 22px}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style></head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">
+        <div class="brand-mark">🔁</div>
+        <div><p class="eyebrow">Digital Electronics · Module 2</p><h1>Code Converter Lab</h1></div>
+      </div>
+      <button id="theme" class="theme-toggle" aria-pressed="false"><span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span></button>
+    </div>
+    <p class="tagline">BCD ⇄ Excess-3 and Binary ⇄ Gray — full theory, truth tables, colour-grouped K-maps with step-by-step simplification, and a live gate-level circuit where every wire, gate and internal signal lights up exactly when it's carrying a logic HIGH.</p>
+    <div class="stat-row">
+      <span class="stat">📚 4 Converters</span>
+      <span class="stat">🗺️ Grouped K-maps</span>
+      <span class="stat">🔌 Live Signal Flow</span>
+      <span class="stat">🎓 Gate-level detail</span>
+    </div>
+  </div>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main id="main"></main>
+<script>
+const gray=[0,1,3,2], bits=n=>[(n>>3)&1,(n>>2)&1,(n>>1)&1,n&1];
+const DATA={
+b2e:{title:"BCD → Excess-3",ins:["B3","B2","B1","B0"],outs:["E3","E2","E1","E0"],valid:n=>n<=9,convert:n=>n+3,
+theory:`<p><b>Concept:</b> BCD uses four bits to represent decimal digits 0–9. Excess-3 is obtained by adding 0011 to a valid BCD digit.</p><p><b>Example:</b> Decimal 5 = BCD 0101. Adding 0011 gives 1000, so Excess-3 = 1000.</p><p><b>Don't-care states:</b> BCD inputs 1010–1111 are invalid for a single decimal digit, so minterms 10–15 are X. They may be used to enlarge K-map groups.</p><p><b>Applications:</b> decimal arithmetic, code conversion and self-complementing decimal-code systems.</p>`,
+expr:["E3 = B3 + B2B1 + B2B0","E2 = B̅2B1 + B̅2B0 + B2B̅1B̅0","E1 = B̅1B̅0 + B1B0 = B1 XNOR B0","E0 = B̅0"],
+groups:[[[8,9,10,11,12,13,14,15],[6,7,14,15],[5,7,13,15]],[[2,3,10,11],[1,3,9,11],[4,12]],[[0,4,8,12],[3,7,11,15]],[[0,2,4,6,8,10,12,14]]],
+terms:[["8-cell → B3","4-cell → B2B1","4-cell → B2B0"],["4-cell → B̅2B1","4-cell → B̅2B0","2-cell → B2B̅1B̅0"],["4-cell → B̅1B̅0","4-cell → B1B0"],["8-cell → B̅0"]]},
+e2b:{title:"Excess-3 → BCD",ins:["E3","E2","E1","E0"],outs:["B3","B2","B1","B0"],valid:n=>n>=3&&n<=12,convert:n=>n-3,
+theory:`<p><b>Concept:</b> Valid Excess-3 codes are 0011 through 1100. Subtract 0011 to recover the corresponding BCD digit.</p><p><b>Example:</b> Excess-3 1000 − 0011 = BCD 0101.</p><p><b>Don't-care states:</b> 0000, 0001, 0010, 1101, 1110 and 1111 are invalid and are treated as X during minimization.</p><p><b>Applications:</b> Excess-3 decoding, BCD display systems and decimal data interfaces.</p>`,
+expr:["B3 = E3E2 + E3E1E0","B2 = E̅2E̅1 + E̅2E̅0 + E2E1E0","B1 = E̅1E0 + E1E̅0 = E1 XOR E0","B0 = E̅0"],
+groups:[[[12,13,14,15],[11,15]],[[0,1,8,9],[0,2,8,10],[7,15]],[[1,5,9,13],[2,6,10,14]],[[0,2,4,6,8,10,12,14]]],
+terms:[["4-cell → E3E2","2-cell → E3E1E0"],["4-cell wrap → E̅2E̅1","4-cell wrap → E̅2E̅0","2-cell → E2E1E0"],["4-cell → E̅1E0","4-cell → E1E̅0"],["8-cell → E̅0"]]},
+b2g:{title:"Binary → Gray",ins:["B3","B2","B1","B0"],outs:["G3","G2","G1","G0"],valid:n=>true,convert:n=>n^(n>>1),theory:`<p><b>Concept:</b> Gray code is a unit-distance code. Adjacent numbers change by only one bit, reducing transition errors.</p><p><b>Rule:</b> G3=B3; G2=B3⊕B2; G1=B2⊕B1; G0=B1⊕B0.</p><p><b>Applications:</b> rotary encoders, position sensors and asynchronous interfaces.</p>`,expr:["G3=B3","G2=B3⊕B2","G1=B2⊕B1","G0=B1⊕B0"],groups:[[],[],[],[]],terms:[[],[],[],[]]},
+g2b:{title:"Gray → Binary",ins:["G3","G2","G1","G0"],outs:["B3","B2","B1","B0"],valid:n=>true,convert:n=>{let b=0;for(let x=n;x;x>>=1)b^=x;return b},theory:`<p><b>Concept:</b> Gray-to-binary conversion uses cumulative XOR.</p><p><b>Rule:</b> B3=G3; B2=B3⊕G2; B1=B2⊕G1; B0=B1⊕G0.</p><p><b>Applications:</b> decoding rotary encoders and digital position sensors.</p>`,expr:["B3=G3","B2=B3⊕G2","B1=B2⊕G1","B0=B1⊕G0"],groups:[[],[],[],[]],terms:[[],[],[],[]]}
+};
+
+const SVG_STROKE="#f4f8ff", SVG_FILL="#173052", SVG_WIRE="#7894b5";
+function OR(x,y,label="OR"){
+ return `<path d="M${x},${y-34} Q${x+32},${y} ${x},${y+34} Q${x+72},${y+31} ${x+122},${y} Q${x+72},${y-31} ${x},${y-34} Z"
+ fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ <text x="${x+48}" y="${y+5}" fill="${SVG_STROKE}" font-size="12" font-weight="700">${label}</text>`;
+}
+function XOR(x,y,label="XOR"){
+ return OR(x,y,label)+`<path d="M${x-13},${y-34} Q${x+18},${y} ${x-13},${y+34}" fill="none" stroke="${SVG_STROKE}" stroke-width="3"/>`;
+}
+function AND(x,y,label="AND"){
+ return `<path d="M${x},${y-34} L${x+48},${y-34} A34,34 0 0 1 ${x+48},${y+34} L${x},${y+34} Z"
+ fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ <text x="${x+20}" y="${y+5}" fill="${SVG_STROKE}" font-size="12" font-weight="700">${label}</text>`;
+}
+function NOT(x,y){
+ return `<path d="M${x},${y-30} L${x+62},${y} L${x},${y+30} Z" fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ <circle cx="${x+72}" cy="${y}" r="9" fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ <text x="${x+14}" y="${y+5}" fill="${SVG_STROKE}" font-size="12" font-weight="700">NOT</text>`;
+}
+function W(d,id="",active=false){
+ return `<path ${id?`id="${id}"`:""} d="${d}" fill="none" stroke="${SVG_WIRE}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="signal${active?" on":""}"/>`;
+}
+function T(x,y,s,size=14){return `<text x="${x}" y="${y}" fill="${SVG_STROKE}" font-size="${size}" font-family="monospace" font-weight="700">${s}</text>`}
+
+function circuit(id){
+ if(id==="e2b") return `<svg viewBox="0 0 900 720">
+ ${T(310,28,"EXCESS-3 → BCD",17)}
+ <!-- common input terminals -->
+ ${T(15,100,"E3",14)}${T(15,210,"E2",14)}${T(15,320,"E1",14)}${T(15,430,"E0",14)}
+ ${W("M48 95 H120",`${id}in0`)}${W("M48 205 H120",`${id}in1`)}${W("M48 315 H120",`${id}in2`)}${W("M48 425 H120",`${id}in3`)}
+
+ <!-- B3 = E3(E2+E1E0): exact continuous chain -->
+ ${AND(250,155)}${W("M120 315 H180 V135 H250")}${W("M120 425 H200 V175 H250")}
+ ${OR(430,155)}${W("M324 155 H430","e2b_p_b3")}${W("M120 205 H370 V135 H430")}
+ ${AND(650,135)}${W("M552 155 H610 V155 H650","e2b_q_b3")}${W("M120 95 H590 V115 H650")}
+ ${W("M724 135 H835",`${id}out0`)}${T(850,140,"B3",14)}
+ ${T(600,70,"B3 = E3(E2+E1E0)",11)}
+
+ <!-- B2 = E2 XNOR(E1E0), separate lower branch -->
+ ${AND(250,355)}${W("M120 315 H220 V335 H250")}${W("M120 425 H210 V375 H250")}
+ ${XOR(500,355,"XNOR")}<circle cx="630" cy="355" r="8" fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ ${W("M324 355 H500","e2b_p_b2")}${W("M120 205 H450 V335 H500")}
+ ${W("M638 355 H835",`${id}out1`)}${T(850,360,"B2",14)}
+ ${T(485,295,"B2 = E2 XNOR(E1E0)",11)}
+
+ <!-- B1 = E1 XOR E0 -->
+ ${XOR(500,510)}${W("M120 315 H460 V490 H500")}${W("M120 425 H440 V530 H500")}
+ ${W("M622 510 H835",`${id}out2`)}${T(850,515,"B1",14)}
+ ${T(500,455,"B1 = E1 XOR E0",11)}
+
+ <!-- B0 = NOT E0 -->
+ ${NOT(500,645)}${W("M120 425 H400 V645 H500")}
+ ${W("M581 645 H835",`${id}out3`)}${T(850,650,"B0",14)}
+ ${T(500,600,"B0 = NOT E0",11)}
+ </svg>`;
+
+ if(id==="b2e") return `<svg viewBox="0 0 900 720">
+ ${T(315,28,"BCD → EXCESS-3",17)}
+ ${T(15,100,"B3",14)}${T(15,210,"B2",14)}${T(15,320,"B1",14)}${T(15,430,"B0",14)}
+ ${W("M48 95 H120",`${id}in0`)}${W("M48 205 H120",`${id}in1`)}${W("M48 315 H120",`${id}in2`)}${W("M48 425 H120",`${id}in3`)}
+
+ <!-- E3 = B3 + B2(B1+B0) -->
+ ${OR(250,155)}${W("M120 315 H180 V135 H250")}${W("M120 425 H200 V175 H250")}
+ ${AND(430,155)}${W("M372 155 H430","b2e_p_e3")}${W("M120 205 H390 V135 H430")}
+ ${OR(650,135)}${W("M504 155 H610 V155 H650","b2e_q_e3")}${W("M120 95 H590 V115 H650")}
+ ${W("M772 135 H835",`${id}out0`)}${T(850,140,"E3",14)}
+ ${T(600,70,"E3 = B3+B2(B1+B0)",11)}
+
+ <!-- E2 = B2 XOR(B1+B0) -->
+ ${OR(250,355)}${W("M120 315 H220 V335 H250")}${W("M120 425 H210 V375 H250")}
+ ${XOR(500,355)}${W("M372 355 H500","b2e_p_e2")}${W("M120 205 H450 V335 H500")}
+ ${W("M622 355 H835",`${id}out1`)}${T(850,360,"E2",14)}
+ ${T(490,295,"E2 = B2 XOR(B1+B0)",11)}
+
+ <!-- E1 -->
+ ${XOR(500,510,"XNOR")}<circle cx="630" cy="510" r="8" fill="${SVG_FILL}" stroke="${SVG_STROKE}" stroke-width="3"/>
+ ${W("M120 315 H460 V490 H500")}${W("M120 425 H440 V530 H500")}
+ ${W("M638 510 H835",`${id}out2`)}${T(850,515,"E1",14)}
+ ${T(500,455,"E1 = B1 XNOR B0",11)}
+
+ <!-- E0 -->
+ ${NOT(500,645)}${W("M120 425 H400 V645 H500")}
+ ${W("M581 645 H835",`${id}out3`)}${T(850,650,"E0",14)}
+ ${T(500,600,"E0 = NOT B0",11)}
+ </svg>`;
+
+ if(id==="b2g") return `<svg viewBox="0 0 780 570">
+ ${T(270,28,"BINARY → GRAY",17)}
+ ${T(15,90,"B3",14)}${T(15,200,"B2",14)}${T(15,310,"B1",14)}${T(15,420,"B0",14)}
+ ${W("M48 85 H120",`${id}in0`)}${W("M48 195 H120",`${id}in1`)}${W("M48 305 H120",`${id}in2`)}${W("M48 415 H120",`${id}in3`)}
+ ${W("M120 85 H700",`${id}out0`)}${T(720,90,"G3",14)}
+ ${XOR(350,180)}${W("M120 85 H250 V158 H350")}${W("M120 195 H280 V202 H350")}${W("M472 180 H700",`${id}out1`)}${T(720,185,"G2",14)}
+ ${XOR(350,300)}${W("M120 195 H230 V278 H350")}${W("M120 305 H270 V322 H350")}${W("M472 300 H700",`${id}out2`)}${T(720,305,"G1",14)}
+ ${XOR(350,420)}${W("M120 305 H210 V398 H350")}${W("M120 415 H260 V442 H350")}${W("M472 420 H700",`${id}out3`)}${T(720,425,"G0",14)}
+ </svg>`;
+
+ return `<svg viewBox="0 0 820 570">
+ ${T(285,28,"GRAY → BINARY",17)}
+ ${T(15,90,"G3",14)}${T(15,200,"G2",14)}${T(15,310,"G1",14)}${T(15,420,"G0",14)}
+ ${W("M48 85 H120",`${id}in0`)}${W("M48 195 H120",`${id}in1`)}${W("M48 305 H120",`${id}in2`)}${W("M48 415 H120",`${id}in3`)}
+ ${W("M120 85 H745",`${id}out0`)}${T(765,90,"B3",14)}
+ ${XOR(280,180)}${W("M120 85 H210 V158 H280")}${W("M120 195 H230 V202 H280")}${W("M402 180 H745",`${id}out1`)}${T(765,185,"B2",14)}
+ ${XOR(470,300)}${W("M402 180 H430 V278 H470")}${W("M120 305 H410 V322 H470")}${W("M592 300 H745",`${id}out2`)}${T(765,305,"B1",14)}
+ ${XOR(650,420)}${W("M592 300 H610 V398 H650")}${W("M120 415 H590 V442 H650")}${W("M772 420 H780",`${id}out3`)}${T(785,425,"B0",14)}
+ </svg>`;
+}
+function truth(id){let d=DATA[id],s=`<div class=scroll><table class=truth><tr>${d.ins.concat(d.outs).map(x=>`<th>${x}</th>`).join("")}</tr>`;for(let n=0;n<16;n++){let o=d.valid(n)?bits(d.convert(n)):["X","X","X","X"];s+=`<tr id="${id}tr${n}">${bits(n).concat(o).map(v=>`<td class="${v==="X"?"dc":""}">${v}</td>`).join("")}</tr>`}return s+"</table></div>"}
+function map(id,k){let d=DATA[id],rows="";gray.forEach(r=>{rows+=`<tr><th>${r.toString(2).padStart(2,"0")}</th>`;gray.forEach(c=>{let n=(r<<2)|c,v=d.valid(n)?bits(d.convert(n))[k]:"X",rings="";(d.groups[k]||[]).forEach((g,j)=>{if(g.includes(n))rings+=`<i class="cellring r${j}"></i>`});rows+=`<td class="${v===1?"one":v==="X"?"dc":""}">${v}<small style="display:block;opacity:.55">m${n}</small>${rings}</td>`});rows+="</tr>"});
+let leg=(d.groups[k]||[]).map((g,j)=>`<span style="border-color:${["#ffb84d","#48dda8","#b88cff","#ff718f"][j]}">G${j+1}: ${g.map(n=>(d.valid(n)?"m":"X")+n).join(", ")}</span>`).join("");
+let desc=(d.terms[k]||[]).map((x,j)=>`• G${j+1}: ${x}`).join("<br>");
+return `<div class=kbox><h3>${d.expr[k]}</h3><table class=km><tr><th>${d.ins[0]}${d.ins[1]}\\${d.ins[2]}${d.ins[3]}</th>${gray.map(x=>`<th>${x.toString(2).padStart(2,"0")}</th>`).join("")}</tr>${rows}</table>${leg?`<div class=legend>${leg}</div><div class=groups><b>Groups:</b><br>${desc}</div>`:"<div class=groups>K-map follows the XOR/direct relationship; no don't-care states exist.</div>"}</div>`}
+
+function grayDerivation(id){
+ if(id==="b2g")return `<div class=card><h2>K-map Simplification — Step by Step</h2>
+ <div class=eqsteps>
+ <div class=eqstep><b>G3:</b> Σm(8,9,10,11,12,13,14,15) → one 8-cell group → <b>G3 = B3</b></div>
+ <div class=eqstep><b>G2:</b> Σm(4,5,6,7,8,9,10,11). Form two 4-cell groups for B̅3B2 and B3B̅2.<br>G2 = B̅3B2 + B3B̅2 = <b>B3 ⊕ B2</b></div>
+ <div class=eqstep><b>G1:</b> Σm(2,3,4,5,10,11,12,13). Groups yield B̅2B1 and B2B̅1.<br>G1 = B̅2B1 + B2B̅1 = <b>B2 ⊕ B1</b></div>
+ <div class=eqstep><b>G0:</b> Σm(1,2,5,6,9,10,13,14). Groups yield B̅1B0 and B1B̅0.<br>G0 = B̅1B0 + B1B̅0 = <b>B1 ⊕ B0</b></div>
+ </div></div>`;
+ if(id==="g2b")return `<div class=card><h2>K-map Simplification — Step by Step</h2>
+ <div class=eqsteps>
+ <div class=eqstep><b>B3:</b> The MSB is unchanged → <b>B3 = G3</b>.</div>
+ <div class=eqstep><b>B2:</b> K-map grouping gives G̅3G2 + G3G̅2 → <b>B2 = G3 ⊕ G2</b>.</div>
+ <div class=eqstep><b>B1:</b> Substitute B2 into B1=B2⊕G1 → <b>B1 = G3 ⊕ G2 ⊕ G1</b>.</div>
+ <div class=eqstep><b>B0:</b> Substitute B1 into B0=B1⊕G0 → <b>B0 = G3 ⊕ G2 ⊕ G1 ⊕ G0</b>.</div>
+ <div class=eqstep>Thus Gray-to-Binary is a <b>cumulative XOR chain</b>: each binary bit equals the previous binary bit XOR the current Gray bit.</div>
+ </div></div>`;
+ return "";
+}
+function page(id){let d=DATA[id];return `<section id=${id} class=page><div class=card><h2>${d.title}</h2><div class=theory>${d.theory}</div><div class=formula>${d.expr.join("<br>")}</div></div><div class=card><h2>Truth Table</h2>${truth(id)}</div><div class=card><h2>K-map and Visual Grouping</h2><div class=note>Coloured nested outlines are drawn directly inside every grouped cell. X cells with an outline are intentionally included in that group. Grouping uses the largest legal powers of two: 8 → 4 → 2 → 1. Groups may overlap and wrap around opposite edges.</div><div class=kmaps>${[0,1,2,3].map(k=>map(id,k)).join("")}</div></div>${grayDerivation(id)}<div class=card><h2>Interactive Gate-Level Logic Diagram</h2><div class=note>The circuit and truth table are synchronized. HIGH signals now propagate visually through the complete circuit: input terminal → gate input → gate output → internal gate-to-gate connection → next gate → final output. Intermediate nodes such as (B1+B0), B2(B1+B0), E1E0 and (E2+E1E0) are evaluated live and their connecting wires glow only when that internal logic value is HIGH. The corresponding truth-table row is highlighted instantly. The signal-flow network uses continuous point-to-point routing from source to gate input, gate output, next gate, and final output.</div><div class=controls>${d.ins.map((x,k)=>`<button class=bit id="${id}b${k}">${x}=0</button>`).join("")}</div><div class=result id="${id}result"></div><div class=diagram>${circuit(id)}</div></div></section>`}
+const TAB_ICON={b2e:'🔢',e2b:'↩️',b2g:'🔁',g2b:'🔀'};
+tabs.innerHTML=Object.entries(DATA).map(([id,d],i)=>`<button class="tab ${i?"":"active"}" data-id=${id}>${TAB_ICON[id]||''} ${d.title}</button>`).join("");main.innerHTML=Object.keys(DATA).map(page).join("");document.querySelector(".page").classList.add("active");
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.page").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.id).classList.add("active")});
+const themeBtn=document.getElementById('theme'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){document.body.setAttribute('data-theme',t);themeBtn.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeBtn.onclick=()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)};
+
+const fabWrap=document.createElement('div');fabWrap.className='fabs';
+fabWrap.innerHTML='<button class="fab" id="topBtn" title="Back to top">↑</button>';
+document.body.appendChild(fabWrap);
+const topBtn=document.getElementById('topBtn');
+window.addEventListener('scroll',()=>{topBtn.classList.toggle('show',window.scrollY>420)});
+topBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+function tagPaths(id){
+ const svg=document.querySelector(`#${id} .diagram svg`); if(!svg)return;
+ const paths=[...svg.querySelectorAll("path")];
+ // Geometric source tracing: tag wire paths by which input rail/value they originate from.
+ // Converter-specific logical dependency map for intermediate and output networks.
+ const deps={
+  b2e:[[0],[1],[2],[3]],
+  e2b:[[0],[1],[2],[3]],
+  b2g:[[0],[1],[2],[3]],
+  g2b:[[0],[1],[2],[3]]
+ };
+ paths.filter(p=>p.getAttribute("stroke")==="#7894b5" || p.classList.contains("signal")).forEach(p=>p.classList.add("flowwire"));
+}
+Object.entries(DATA).forEach(([id,d])=>{let s=[0,0,0,0];tagPaths(id);function run(){let n=s.reduce((a,b)=>a*2+b,0),ok=d.valid(n),o=ok?bits(d.convert(n)):null;s.forEach((v,k)=>{let b=document.getElementById(id+"b"+k);b.textContent=d.ins[k]+"="+v;b.classList.toggle("active",!!v);document.getElementById(id+"in"+k)?.classList.toggle("on",!!v)});[0,1,2,3].forEach(k=>document.getElementById(id+"out"+k)?.classList.toggle("on",!!(o&&o[k])));
+// Reset branch highlighting, then illuminate complete logical paths carrying HIGH.
+const svg=document.querySelector(`#${id} .diagram svg`);
+if(svg){
+ [...svg.querySelectorAll(".flowwire")].forEach(p=>p.classList.remove("on"));
+ // Input/output terminal segments are always synchronized explicitly.
+ s.forEach((v,k)=>document.getElementById(id+"in"+k)?.classList.toggle("on",!!v));
+ (o||[0,0,0,0]).forEach((v,k)=>document.getElementById(id+"out"+k)?.classList.toggle("on",!!v));
+// Evaluate and illuminate INTERNAL gate-to-gate nets as real digital signals.
+if(id==="b2e"){
+ const p=s[2]|s[3];             // B1+B0
+ const q=s[1]&p;                // B2(B1+B0)
+ document.getElementById("b2e_p_e3")?.classList.toggle("on",!!p);
+ document.getElementById("b2e_q_e3")?.classList.toggle("on",!!q);
+ document.getElementById("b2e_p_e2")?.classList.toggle("on",!!p);
+}
+if(id==="e2b"){
+ const p=s[2]&s[3];             // E1E0
+ const q=s[1]|p;                // E2+E1E0
+ document.getElementById("e2b_p_b3")?.classList.toggle("on",!!p);
+ document.getElementById("e2b_q_b3")?.classList.toggle("on",!!q);
+ document.getElementById("e2b_p_b2")?.classList.toggle("on",!!p);
+}
+ // Highlight internal wire branches by evaluating the circuit's intermediate HIGH signals.
+ const wires=[...svg.querySelectorAll(".flowwire")];
+ const high=(p)=>p.classList.add("on");
+ // Use SVG path coordinate/source proximity plus converter logic to light branch networks.
+ // This deliberately lights continuous source-to-gate branches, not only final outputs.
+ if(id==="b2g"){
+   // B3 direct + B3/B2, B2/B1, B1/B0 XOR input branches
+   wires.forEach(p=>{let q=p.getAttribute("d")||"";
+     if((s[0]&&/120 85|250 V158/.test(q))||(s[1]&&/120 195|230 V278/.test(q))||
+        (s[2]&&/120 305|210 V398/.test(q))||(s[3]&&/120 415|260 V442/.test(q))) high(p);
+   });
+ } else if(id==="g2b"){
+   let b3=s[0],b2=s[0]^s[1],b1=b2^s[2];
+   wires.forEach(p=>{let q=p.getAttribute("d")||"";
+     if((s[0]&&/120 85|210 V158/.test(q))||(s[1]&&/120 195|230 V202/.test(q))||
+        (s[2]&&/120 305|410 V322/.test(q))||(s[3]&&/120 415|590 V442/.test(q))||
+        (b2&&/402 180/.test(q))||(b1&&/592 300/.test(q))) high(p);
+   });
+ } else {
+   // For BCD/Excess-3, light every branch originating from a HIGH common input.
+   const patterns=[
+     ["120 95","590 V115","530 V95"],
+     ["120 205","370 V135","450 V335","390 V135"],
+     ["120 315","180 V135","220 V335","460 V490"],
+     ["120 425","200 V175","210 V375","440 V530","400 V645"]
+   ];
+   wires.forEach(p=>{let q=p.getAttribute("d")||"";
+     patterns.forEach((arr,k)=>{if(s[k]&&arr.some(x=>q.includes(x)))high(p)});
+   });
+ }
+}
+document.querySelectorAll(`#${id} .truth tr`).forEach(r=>r.classList.remove("live-row"));
+document.getElementById(id+"tr"+n)?.classList.add("live-row");
+document.getElementById(id+"result").innerHTML=ok?`Input <b>${s.join("")}</b> → ${o.map((v,k)=>`<span class="lamp ${v?"on":""}">${d.outs[k]}=${v}</span>`).join("")}`:`Input <b>${s.join("")}</b> is a don't-care / invalid source-code combination.`}s.forEach((_,k)=>document.getElementById(id+"b"+k).onclick=()=>{s[k]^=1;run()});run()});
+</script></body></html>

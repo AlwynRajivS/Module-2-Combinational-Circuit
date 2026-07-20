@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4-Bit Arithmetic Lab — Interactive Ripple Carry Adder/Subtractor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS (matches Adder/Subtractor Circuit Lab) ============ */
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --amber:#f59e0b;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --amber:#d97706;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:
+    linear-gradient(var(--bg-grid-line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;background-position:center top;
+  min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease);
+}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+/* ============ HEADER ============ */
+header{
+  position:relative;overflow:hidden;padding:38px 20px 30px;color:#fff;
+  background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));
+  background-size:220% 220%;animation:bgshift 12s ease infinite;
+}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+header svg.circuit{position:absolute;inset:0;width:100%;height:100%;opacity:.22;pointer-events:none}
+header svg.circuit path{stroke:#fff;stroke-width:1.4;fill:none;stroke-dasharray:6 10;animation:travel 6s linear infinite}
+header svg.circuit circle{fill:#fff;animation:blink 2.6s ease-in-out infinite}
+@keyframes travel{to{stroke-dashoffset:-160}}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+.header-inner{position:relative;max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:52px;height:52px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff40;
+  display:flex;align-items:center;justify-content:center;font-size:24px;backdrop-filter:blur(6px);
+  box-shadow:0 0 24px #ffffff30;flex:none;
+}
+.eyebrow{margin:0 0 4px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+header h1{margin:0;font:700 clamp(22px,4vw,32px)/1.15 var(--font-display);letter-spacing:-.01em}
+.tagline{position:relative;max-width:780px;margin:18px auto 0;line-height:1.65;opacity:.92;font-size:15px}
+.theme-toggle{
+  display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;
+  padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);
+  backdrop-filter:blur(6px);transition:.25s var(--ease);
+}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle .ic{font-size:16px;transition:transform .4s var(--ease)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+
+/* ============ LAYOUT ============ */
+main{max-width:1180px;margin:auto;padding:16px 18px 60px}
+
+.tabs-wrap{position:sticky;top:0;z-index:30;padding:12px 0;margin-bottom:6px;
+  background:linear-gradient(var(--bg),var(--bg) 70%,transparent);
+}
+.tabs{display:flex;gap:9px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:thin;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tabs button,.mode button{
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
+  padding:11px 16px;border-radius:999px;cursor:pointer;font:600 13.5px/1 var(--font-display);
+  white-space:nowrap;transition:.25s var(--ease);box-shadow:var(--shadow-sm);flex:none;
+}
+.tabs button:hover,.mode button:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.tabs button.on,.mode button.on{
+  color:var(--accent-ink);background:linear-gradient(120deg,var(--accent),var(--accent-strong));
+  border-color:transparent;transform:translateY(-2px);
+  box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.mode{display:flex;gap:9px;flex-wrap:wrap}
+
+.panel{display:none}
+.panel.on{display:block;animation:enter .45s var(--ease)}
+@keyframes enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px;margin:16px 0;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);
+  animation:cardIn .5s var(--ease) both;
+}
+.card:nth-of-type(1){animation-delay:.02s}.card:nth-of-type(2){animation-delay:.08s}
+.card:nth-of-type(3){animation-delay:.14s}.card:nth-of-type(4){animation-delay:.2s}.card:nth-of-type(5){animation-delay:.26s}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.card h2{margin:0 0 4px;font:700 22px/1.25 var(--font-display);letter-spacing:-.01em;border-left:5px solid var(--accent);padding-left:12px}
+.card h3{margin:0 0 4px;font:700 18px/1.3 var(--font-display);letter-spacing:-.01em;border-left:5px solid var(--accent);padding-left:12px}
+
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.box{padding:16px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border-soft);transition:.25s var(--ease)}
+.box:hover{border-color:var(--accent);background:var(--surface-hover)}
+.box h4{margin:0 0 8px;font-family:var(--font-display);font-size:14.5px;color:var(--brand-b);letter-spacing:.01em}
+[data-theme="light"] .box h4{color:#4338ca}
+.box p{line-height:1.65;color:var(--text-muted);margin:0;font-size:14.5px}
+
+/* Inputs */
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.inp{padding:16px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-md)}
+.inp b{font:600 12px/1 var(--font-mono);color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase}
+.inp input{
+  width:100px;margin-top:10px;padding:11px 12px;font:700 18px/1 var(--font-mono);color:var(--text);
+  background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);transition:.2s var(--ease);
+}
+.inp input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent)}
+.bits{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.bit{padding:9px 10px;border-radius:9px;background:var(--track);color:var(--text-muted);font:700 13px var(--font-mono);border:1px solid var(--border);transition:.25s var(--ease)}
+.bit.one{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;box-shadow:0 0 14px color-mix(in srgb, var(--accent) 65%, transparent)}
+
+.result{margin-top:16px;padding:18px 20px;border-radius:var(--radius-md);color:#fff;
+  background:linear-gradient(120deg,var(--brand-a),var(--brand-b));font-size:15.5px;font-family:var(--font-mono);
+  box-shadow:var(--shadow-sm);line-height:1.7}
+.result b{font-size:24px;font-family:var(--font-display)}
+
+.step{padding:12px 14px;margin:9px 0;border-left:4px solid var(--brand-b);background:var(--surface-2);border-radius:var(--radius-sm);line-height:1.65;color:var(--text-muted);font-size:14.5px}
+.step b{color:var(--text)}
+.example{line-height:1.75;padding:16px 18px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-md);color:var(--text-muted);font-size:14.5px}
+.example b{color:var(--text)}
+
+/* Diagram */
+.diagram{overflow:auto;background:var(--surface-2);border-radius:var(--radius-md);padding:14px;border:1px solid var(--border)}
+svg{width:100%;height:auto;min-width:0;display:block}
+.fa,.xor,.pin{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.4}
+.junction{fill:var(--ink)}
+.stage{fill:color-mix(in srgb, var(--brand-b) 6%, transparent);stroke:var(--border);stroke-width:1.5;stroke-dasharray:6 5}
+.wire{fill:none;stroke:var(--wire-off);stroke-width:4;stroke-linecap:round;transition:stroke .25s,filter .25s}
+.wire.hi{stroke:var(--accent);stroke-width:5;stroke-dasharray:10 7;animation:flow .6s linear infinite;
+  filter:drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 80%, transparent));}
+@keyframes flow{to{stroke-dashoffset:-17}}
+.pulse{fill:var(--accent);opacity:0;filter:drop-shadow(0 0 6px var(--accent));transition:opacity .2s}
+.wire.hi + .pulse{opacity:1}
+.t{font:700 13px var(--font-mono);fill:var(--ink)}
+.xorlabel{font:700 11px var(--font-mono);fill:var(--brand-b)}
+[data-theme="light"] .xorlabel{fill:#4338ca}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px}
+.legend span{padding:8px 12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border-soft);font:600 12.5px/1 var(--font-body);color:var(--text-muted)}
+
+.carry{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:4px}
+.carry span{padding:9px 12px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);font:700 13px var(--font-mono);color:var(--text-muted);flex:none;transition:.25s var(--ease)}
+.carry span.hi{background:linear-gradient(135deg,var(--amber),var(--accent-strong));color:var(--accent-ink);border-color:transparent;box-shadow:0 0 16px color-mix(in srgb, var(--amber) 55%, transparent)}
+
+footer{max-width:1180px;margin:20px auto 0;padding:20px 18px 40px;text-align:center;color:var(--text-faint);font-size:13px}
+
+@media(max-width:700px){
+  main{padding:10px 12px 50px}
+  .card{padding:16px;border-radius:16px}
+  .learn,.inputs{grid-template-columns:1fr}
+  header{padding:26px 16px 22px}
+  .header-inner{flex-direction:column}
+  .tagline{font-size:13.5px}
+  .t{font-size:11px}
+  .xorlabel{font-size:9px}
+  .legend{gap:6px}
+  .legend span{font-size:11px;padding:6px 9px}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <svg class="circuit" viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 40H180Q200 40 200 60V120H400"/>
+    <path d="M0 220H150Q170 220 170 200V150H500Q520 150 520 170V260H800"/>
+    <path d="M600 0V70Q600 90 620 90H800"/>
+    <circle cx="200" cy="60" r="4"/><circle cx="400" cy="120" r="4"/><circle cx="520" cy="170" r="4"/><circle cx="620" cy="90" r="4"/>
+  </svg>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div>
+        <p class="eyebrow">Interactive Logic Circuit Lab</p>
+        <h1>4-Bit Arithmetic Lab</h1>
+      </div>
+    </div>
+    <button id="themeToggle" class="theme-toggle" aria-pressed="false">
+      <span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+    </button>
+  </div>
+  <p class="tagline">Ripple carry addition, 2's complement subtraction, and a combined adder/subtractor built from cascaded Full Adders, NOT gates and XOR gates — type a number, watch the bits and carries light up live.</p>
+</header>
+<main>
+  <nav class="tabs" id="tabsNav">
+    <button class="on" onclick="show('add',this)"><span class="glyph">➕</span> Ripple Carry Adder</button>
+    <button onclick="show('sub',this)"><span class="glyph">➖</span> 2's Complement Subtractor</button>
+    <button onclick="show('as',this)"><span class="glyph">🔄</span> Adder / Subtractor</button>
+  </nav>
+  <div id="app"></div>
+</main>
+<footer>Built with plain HTML, SVG &amp; JavaScript · Enter decimal values above to simulate every circuit live</footer>
+
+<script>
+const info={add:[['💡 Concept','Four Full Adders are cascaded to add two 4-bit numbers.'],['⚙️ Operation','Each stage adds Ai, Bi and incoming carry Ci. Cout becomes the next stage Cin.'],['🌍 Application','Used in ALUs, processors, counters and address arithmetic.'],['🧠 Key Point','Carry ripples from FA0 to FA3, creating propagation delay.']],sub:[['💡 Concept',"Subtraction is performed as A − B = A + B̅ + 1 using 2's complement."],['⚙️ Operation',"Complement all B bits and apply C0=1. The same Full Adder chain then performs subtraction."],['🌍 Application','Processors reuse addition hardware for efficient binary subtraction.'],['🧠 Key Point',"The +1 required for 2's complement is supplied as the initial carry."]],as:[['💡 Concept','One circuit performs both addition and subtraction using Full Adders and XOR gates.'],['⚙️ Operation','M=0 gives B⊕0=B and C0=0. M=1 gives B⊕1=B̅ and C0=1.'],['🌍 Application','This is a fundamental arithmetic block in CPU and ALU design.'],['🧠 Key Point','Mode M acts as both XOR control and the initial carry for subtraction.']]};
+let mode=0;const b4=n=>(n&15).toString(2).padStart(4,'0'),cl=n=>Math.max(0,Math.min(15,+n||0));
+const PW=(id,d)=>`<path id="${id}" class="wire" d="${d}"/><circle r="4.2" class="pulse"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`;
+function FA(x,k){
+return `<g>
+<rect x="${x}" y="190" width="150" height="145" rx="20" class="fa"/>
+<text x="${x+75}" y="222" text-anchor="middle" class="t">FULL ADDER FA${k}</text>
+<circle cx="${x+45}" cy="190" r="5" class="pin"/><circle cx="${x+105}" cy="190" r="5" class="pin"/>
+<circle cx="${x}" cy="265" r="5" class="pin"/><circle cx="${x+150}" cy="265" r="5" class="pin"/>
+<circle cx="${x+75}" cy="335" r="5" class="pin"/>
+<text x="${x+34}" y="180" class="t">A${k}</text><text x="${x+94}" y="180" class="t">B${k}</text>
+<text x="${x+8}" y="255" class="t">Cout</text><text x="${x+112}" y="255" class="t">Cin</text>
+<text x="${x+64}" y="325" class="t">S${k}</text>
+</g>`}
+function NOTgate(x,y,k){
+return `<g>
+<path class="xor" d="M${x} ${y}L${x+60} ${y}L${x+30} ${y+55}Z"/>
+<circle cx="${x+30}" cy="${y+64}" r="8" class="xor"/>
+<text x="${x+30}" y="${y+27}" text-anchor="middle" class="xorlabel">NOT</text>
+<text x="${x+18}" y="${y-8}" class="t">B${k}</text>
+<text x="${x+40}" y="${y+88}" class="t">B̅${k}</text>
+</g>`}
+function XORgate(x,y,k){
+return `<g>
+
+<!-- XOR gate body -->
+<path class="xor"
+ d="M${x} ${y+12}
+    Q${x+30} ${y+36} ${x+60} ${y+12}
+    Q${x+56} ${y+58} ${x+30} ${y+92}
+    Q${x+4} ${y+58} ${x} ${y+12}Z"/>
+
+<!-- XOR extra curved line -->
+<path class="xor" fill="none"
+ d="M${x} ${y+4}
+    Q${x+30} ${y+28} ${x+60} ${y+4}"/>
+
+<!-- B input pin -->
+<circle cx="${x+18}" cy="${y+9}" r="4" class="pin"/>
+
+<!-- M input pin -->
+<circle cx="${x+42}" cy="${y+9}" r="4" class="pin"/>
+
+<!-- XOR output pin -->
+<circle cx="${x+30}" cy="${y+92}" r="4" class="pin"/>
+
+<!-- Labels -->
+<text x="${x+18}" y="${y-3}" text-anchor="middle" class="t">B${k}</text>
+<text x="${x+42}" y="${y-3}" text-anchor="middle" class="t">M</text>
+
+<text x="${x+30}" y="${y+52}"
+      text-anchor="middle"
+      class="xorlabel">XOR</text>
+
+<text x="${x+38}" y="${y+108}" class="t">B${k}⊕M</text>
+
+</g>`;
+}
+function diagram(id,xors){
+let pos={3:105,2:335,1:565,0:795};
+let isSub=id==='sub';
+let s=`<svg viewBox="0 0 1060 430" preserveAspectRatio="xMidYMid meet">
+<text x="18" y="24" class="t">${isSub?"4-bit 2's Complement Subtractor — NOT gates complement B; outputs feed Full Adders from TOP":xors?'4-bit Adder/Subtractor — XOR outputs feed Full Adder B inputs from TOP':'4-bit Ripple Carry Adder — A and B enter from TOP; Sum exits BOTTOM'}</text>
+`;
+for(let k=3;k>=0;k--){
+ let x=pos[k];
+ s+=`<rect x="${x-15}" y="55" width="180" height="330" rx="20" class="stage"/>`;
+ if(isSub){
+   s+=NOTgate(x+75,70,k);
+   s+=PW(id+'b'+k,`M${x+105} 52V70`);
+   s+=PW(id+'nb'+k,`M${x+105} 142V190`);
+   s+=PW(id+'a'+k,`M${x+45} 52V190`);
+   s+=`<text x="${x+34}" y="48" class="t">A${k}</text>`;
+ }else if(xors){
+
+   // XOR gate position
+   const gx = x + 75;
+   const gy = 65;
+
+   s += XORgate(gx,gy,k);
+
+   // ==================================================
+   // B INPUT -> FIRST XOR INPUT
+   // ==================================================
+   // B comes vertically from TOP
+   // XOR B input = gx + 18
+   s += PW(
+     id+'b'+k,
+     `M${gx+18} 42V${gy+9}`
+   );
+
+   // ==================================================
+   // XOR OUTPUT -> FULL ADDER B INPUT
+   // ==================================================
+   // XOR output = gx+30, gy+92
+   // Full Adder B input = x+105, 190
+   // They have the same X coordinate
+   s += PW(
+     id+'bx'+k,
+     `M${gx+30} ${gy+92}V190`
+   );
+
+   // ==================================================
+   // A INPUT -> FULL ADDER A INPUT
+   // ==================================================
+   s += PW(
+     id+'a'+k,
+     `M${x+45} 42V190`
+   );
+
+   // A label
+   s += `<text x="${x+45}" y="38"
+             text-anchor="middle"
+             class="t">A${k}</text>`;
+
+
+ }else{
+   s+=PW(id+'a'+k,`M${x+45} 52V190`)+PW(id+'b'+k,`M${x+105} 52V190`);
+   s+=`<text x="${x+34}" y="48" class="t">A${k}</text><text x="${x+94}" y="48" class="t">B${k}</text>`;
+ }
+ s+=FA(x,k);
+ s+=PW(id+'s'+k,`M${x+75} 335V405`)+`<text x="${x+62}" y="425" class="t">${isSub?'D':'S'}${k}</text>`;
+}
+s+=PW(id+'c0','M1030 265H945')+`<text x="970" y="252" class="t">${isSub?'C0=1':xors?'C0=M':'C0=0'}</text>`;
+s+=PW(id+'c1','M795 265H715')+`<text x="745" y="252" class="t">C1</text>`;
+s+=PW(id+'c2','M565 265H485')+`<text x="515" y="252" class="t">C2</text>`;
+s+=PW(id+'c3','M335 265H255')+`<text x="285" y="252" class="t">C3</text>`;
+s+=PW(id+'c4','M105 265H25')+`<text x="28" y="252" class="t">C4</text>`;
+if(xors){
+
+  // ==================================================
+  // M CONTROL BUS
+  // ==================================================
+  // Main horizontal M line at top
+  const mBusY = 42;
+
+  s += PW(
+    id+'m',
+    `M55 ${mBusY}H1020`
+  );
+
+  // M label
+  s += `<text x="18"
+             y="${mBusY+5}"
+             class="t">M</text>`;
+
+
+  // ==================================================
+  // M BUS -> SECOND INPUT OF EACH XOR
+  // ==================================================
+  for(let k=3;k>=0;k--){
+
+    let x = pos[k];
+
+    const gx = x + 75;
+    const gy = 65;
+
+    // Second XOR input coordinates
+    const mInputX = gx + 42;
+    const mInputY = gy + 9;
+
+    // M bus branch:
+    // Bus -> vertical -> XOR M input
+    s += PW(
+      id+'m'+k,
+      `M${mInputX} ${mBusY}
+       V${mInputY}`
+    );
+
+    // Junction dot on M bus
+    s += `<circle
+            cx="${mInputX}"
+            cy="${mBusY}"
+            r="5"
+            class="junction"/>`;
+  }
+}
+return s+'</svg>'}
+function panel(id){let title=id==='add'?'4-Bit Ripple Carry Adder using Full Adders':id==='sub'?"4-Bit Subtractor using Full Adders – 2's Complement":'4-Bit Adder / Subtractor using Full Adders & XOR Gates';return `<section id="${id}" class="panel ${id==='add'?'on':''}"><div class="card"><h2>${title}</h2><div class="learn">${info[id].map(x=>`<div class="box"><h4>${x[0]}</h4><p>${x[1]}</p></div>`).join('')}</div></div><div class="card">${id==='as'?`<div class="mode"><button id="ma" class="on" onclick="setMode(0)">➕ M=0 Addition</button><button id="ms" onclick="setMode(1)">➖ M=1 Subtraction</button></div><br>`:''}<div class="inputs"><div class="inp"><b>Decimal A (0–15)</b><br><input id="${id}A" type="number" min="0" max="15" value="9" oninput="upd('${id}')"><div id="${id}ab"></div></div><div class="inp"><b>Decimal B (0–15)</b><br><input id="${id}B" type="number" min="0" max="15" value="5" oninput="upd('${id}')"><div id="${id}bb"></div></div></div><div id="${id}res"></div></div><div class="card"><h3>🔌 Animated Hardware Architecture</h3><div class="legend"><span>⬇ Inputs enter from TOP</span><span>⬇ Sum / Difference exits BOTTOM</span><span>⬅ Carry propagates RIGHT → LEFT</span><span>🟡 Amber = Logic 1</span></div><div class="diagram">${diagram(id,id==='as')}</div><div id="${id}car" class="carry"></div><p style="color:var(--text-muted);font-size:14px;line-height:1.65;margin-top:14px"><b style="color:var(--text)">Carry direction:</b> C0 enters FA0 at the rightmost LSB stage. Then C1 → FA1, C2 → FA2, C3 → FA3, and C4 leaves the leftmost MSB stage. Glowing animated paths indicate logic HIGH (1). In the 2's complement subtractor, each B bit first passes downward through a NOT gate; the complemented output B̅ then connects directly to the corresponding Full Adder B input, while C0=1 supplies the required +1.</p></div><div class="card"><h3>🧮 Step-by-Step Explanation</h3><div id="${id}steps" style="margin-top:14px"></div></div><div class="card"><h3>📘 Interactive Worked Example</h3><div id="${id}ex" class="example" style="margin-top:14px"></div></div></section>`}
+app.innerHTML=['add','sub','as'].map(panel).join('');
+function show(id,b){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
+function setMode(m){mode=m;ma.classList.toggle('on',!m);ms.classList.toggle('on',!!m);upd('as')}
+function bitsHTML(n,l){return `<div class="bits">${b4(n).split('').map((x,i)=>`<span class="bit ${x==='1'?'one':''}">${l}${3-i}=${x}</span>`).join('')}</div><b style="font-family:var(--font-mono)">${n}₁₀ = ${b4(n)}₂</b>`}
+function calc(a,b,c0){let c=c0,cc=[c0],s=0;for(let k=0;k<4;k++){let A=a>>k&1,B=b>>k&1,q=A^B^c,n=(A&B)|(A&c)|(B&c);s|=q<<k;c=n;cc.push(c)}return{s,c,cc}}
+function w(id,v){let e=document.getElementById(id);if(e)e.classList.toggle('hi',!!v)}
+function upd(id){let A=cl(document.getElementById(id+'A').value),B=cl(document.getElementById(id+'B').value);document.getElementById(id+'A').value=A;document.getElementById(id+'B').value=B;document.getElementById(id+'ab').innerHTML=bitsHTML(A,'A');document.getElementById(id+'bb').innerHTML=bitsHTML(B,'B');let sub=id==='sub'||(id==='as'&&mode),eb=sub?(~B)&15:B,c0=sub?1:0,r=calc(A,eb,c0),dec=sub?A-B:A+B;document.getElementById(id+'res').innerHTML=`<div class="result"><b>${A} ${sub?'−':'+'} ${B} = ${dec}</b><br>${b4(A)} ${sub?'−':'+'} ${b4(B)} → 4-bit output ${b4(r.s)} | Cout=${r.c}</div>`;document.getElementById(id+'car').innerHTML=r.cc.map((x,i)=>`<span class="${x?'hi':''}">C${i}=${x}</span>`).join('');for(let k=0;k<4;k++){w(id+'a'+k,A>>k&1);w(id+'s'+k,r.s>>k&1);w(id+'c'+k,r.cc[k]);if(id==='add')w(id+'b'+k,eb>>k&1);if(id==='sub'){w(id+'b'+k,B>>k&1);w(id+'nb'+k,eb>>k&1);}if(id==='as'){w(id+'b'+k,B>>k&1);w(id+'bx'+k,eb>>k&1);w(id+'m'+k,mode)}}w(id+'c4',r.cc[4]);if(id==='as')w(id+'m',mode);let ones=(~B)&15,twos=(ones+1)&15;document.getElementById(id+'steps').innerHTML=sub?`<div class="step"><b>1.</b> A=${b4(A)}, B=${b4(B)}</div><div class="step"><b>2.</b> 1's complement of B: ${b4(ones)}</div><div class="step"><b>3.</b> Add 1: ${b4(ones)} + 0001 = ${b4(twos)} (2's complement)</div><div class="step"><b>4.</b> Full Adders calculate A + B̅ + 1. C0=1.</div><div class="step"><b>5.</b> Output=${b4(r.s)}, C4=${r.c}; decimal result=${dec}.</div>`:`<div class="step"><b>1.</b> Convert A=${A} to ${b4(A)} and B=${B} to ${b4(B)}.</div><div class="step"><b>2.</b> FA0 starts at the least significant bit with C0=0.</div><div class="step"><b>3.</b> Each Cout becomes the next Cin: ${r.cc.map((x,i)=>`C${i}=${x}`).join(', ')}.</div><div class="step"><b>4.</b> 4-bit output=${b4(r.s)}, Cout=${r.c}; mathematical result=${dec}.</div>`;document.getElementById(id+'ex').innerHTML=sub?`To perform <b>${A}−${B}</b>, the circuit does not directly subtract. It converts B=${b4(B)} into its 2's complement ${b4(twos)} and adds it to A. Therefore ${b4(A)} + ${b4(twos)} produces the 4-bit result <b>${b4(r.s)}</b>.${id==='as'?` Mode M=${mode}; M=1 complements B through XOR gates and also sets C0=1.`:''}`:`For <b>${A}+${B}</b>, FA0 adds the least significant bits first. Its carry moves to FA1, then FA2 and FA3. This ripple process produces <b>${b4(r.s)}</b> with final Cout=${r.c}.${id==='as'?` Mode M=0 keeps B unchanged through the XOR gates and sets C0=0.`:''}`}
+['add','sub','as'].forEach(upd);
+
+/* Theme toggle (matches Adder/Subtractor Circuit Lab) */
+const bodyEl=document.body,themeToggle=document.getElementById('themeToggle'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){bodyEl.setAttribute('data-theme',t);themeToggle.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)});
+</script>
+</body>
+</html>

@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Module 2 — Combinational Circuits | Digital Logic Lab</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+/* =========================================================
+   ROOT VARIABLES
+========================================================= */
+
+:root{
+  --radius-lg:22px;
+  --radius-md:14px;
+  --radius-sm:9px;
+
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+
+
+/* =========================================================
+   DARK THEME
+========================================================= */
+
+[data-theme="dark"]{
+  --bg:#090d15;
+  --bg-grid-line:#141d2f;
+
+  --surface:#111827;
+  --surface-2:#161f33;
+  --surface-hover:#1b2540;
+
+  --border:#233149;
+  --border-soft:#1a2438;
+
+  --text:#e9edf7;
+  --text-muted:#8996b3;
+  --text-faint:#5a6683;
+
+  --ink:#dfe6f5;
+  --gate-fill:#161f33;
+  --wire-off:#374560;
+
+  --accent:#ffb347;
+  --accent-strong:#ffd08a;
+  --accent-ink:#1a1206;
+
+  --amber:#f59e0b;
+
+  --brand-a:#7c6cf0;
+  --brand-b:#34d3c9;
+  --brand-c:#ff8fb1;
+
+  --track:#1a2438;
+
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+
+  --ready-bg:#12331f;
+  --ready-text:#5fe08c;
+  --ready-border:#1e5636;
+
+  --soon-bg:#241c33;
+  --soon-text:#b9a6ff;
+  --soon-border:#372a52;
+
+  color-scheme:dark;
+}
+
+
+/* =========================================================
+   LIGHT THEME
+========================================================= */
+
+[data-theme="light"]{
+  --bg:#eef3fa;
+  --bg-grid-line:#dbe5f2;
+
+  --surface:#ffffff;
+  --surface-2:#f4f8fd;
+  --surface-hover:#e9f0fa;
+
+  --border:#d9e2f0;
+  --border-soft:#e6ecf6;
+
+  --text:#152036;
+  --text-muted:#5c6a87;
+  --text-faint:#8695b3;
+
+  --ink:#16233d;
+  --gate-fill:#ffffff;
+
+  --wire-off:#aab8ce;
+
+  --accent:#e8890c;
+  --accent-strong:#ffb347;
+  --accent-ink:#241500;
+
+  --amber:#d97706;
+
+  --brand-a:#4338ca;
+  --brand-b:#0891b2;
+  --brand-c:#c0388a;
+
+  --track:#e7edf7;
+
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+
+  --ready-bg:#e4f8ea;
+  --ready-text:#178a4c;
+  --ready-border:#bfe9cd;
+
+  --soon-bg:#f1edff;
+  --soon-text:#6d49c7;
+  --soon-border:#ded2ff;
+
+  color-scheme:light;
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--text);
+  background:var(--bg);
+
+  background-image:
+    linear-gradient(
+      var(--bg-grid-line) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      var(--bg-grid-line) 1px,
+      transparent 1px
+    );
+
+  background-size:42px 42px;
+  background-position:center top;
+
+  min-height:100vh;
+
+  transition:
+    background-color .4s var(--ease),
+    color .4s var(--ease);
+}
+
+::selection{
+  background:var(--accent);
+  color:var(--accent-ink);
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header{
+  position:relative;
+  overflow:hidden;
+
+  padding:46px 20px 34px;
+
+  color:#fff;
+
+  background:
+    linear-gradient(
+      125deg,
+      var(--brand-a),
+      var(--brand-c) 55%,
+      var(--brand-b)
+    );
+
+  background-size:220% 220%;
+
+  animation:bgshift 12s ease infinite;
+}
+
+@keyframes bgshift{
+  0%,100%{
+    background-position:0% 40%;
+  }
+
+  50%{
+    background-position:100% 60%;
+  }
+}
+
+
+/* =========================================================
+   HEADER ORBS
+========================================================= */
+
+header .orb{
+  position:absolute;
+  border-radius:50%;
+  background:#ffffff26;
+  filter:blur(2px);
+  pointer-events:none;
+}
+
+header .orb.o1{
+  width:300px;
+  height:300px;
+  right:-100px;
+  top:-150px;
+
+  animation:float1 9s ease-in-out infinite;
+}
+
+header .orb.o2{
+  width:180px;
+  height:180px;
+  left:-70px;
+  bottom:-100px;
+
+  animation:float2 11s ease-in-out infinite;
+}
+
+@keyframes float1{
+  50%{
+    transform:
+      translate(-40px,40px)
+      scale(1.12);
+  }
+}
+
+@keyframes float2{
+  50%{
+    transform:
+      translate(30px,-25px)
+      scale(1.08);
+  }
+}
+
+
+/* =========================================================
+   CIRCUIT BACKGROUND
+========================================================= */
+
+header svg.circuit{
+  position:absolute;
+  inset:0;
+
+  width:100%;
+  height:100%;
+
+  opacity:.2;
+  pointer-events:none;
+}
+
+header svg.circuit path{
+  stroke:#fff;
+  stroke-width:1.4;
+  fill:none;
+
+  stroke-dasharray:6 10;
+
+  animation:travel 6s linear infinite;
+}
+
+header svg.circuit circle{
+  fill:#fff;
+
+  animation:blink 2.6s ease-in-out infinite;
+}
+
+@keyframes travel{
+  to{
+    stroke-dashoffset:-160;
+  }
+}
+
+@keyframes blink{
+  0%,100%{
+    opacity:.25;
+  }
+
+  50%{
+    opacity:1;
+  }
+}
+
+
+/* =========================================================
+   HEADER CONTENT
+========================================================= */
+
+.header-inner{
+  position:relative;
+
+  max-width:1180px;
+  margin:0 auto;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+
+  gap:16px;
+
+  flex-wrap:wrap;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.brand-mark{
+  width:54px;
+  height:54px;
+
+  border-radius:15px;
+
+  background:#ffffff22;
+
+  border:1px solid #ffffff40;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:25px;
+
+  backdrop-filter:blur(6px);
+
+  box-shadow:0 0 24px #ffffff30;
+
+  flex:none;
+}
+
+.eyebrow{
+  margin:0 0 4px;
+
+  font:
+    600 11px/1
+    var(--font-mono);
+
+  letter-spacing:.14em;
+
+  text-transform:uppercase;
+
+  opacity:.88;
+}
+
+header h1{
+  margin:0;
+
+  font:
+    700 clamp(26px,4.4vw,40px)/1.15
+    var(--font-display);
+
+  letter-spacing:-.01em;
+}
+
+.tagline{
+  position:relative;
+
+  max-width:800px;
+
+  margin:18px auto 0;
+
+  line-height:1.7;
+
+  opacity:.92;
+
+  font-size:15.5px;
+}
+
+
+/* =========================================================
+   THEME BUTTON
+========================================================= */
+
+.theme-toggle{
+  display:flex;
+  align-items:center;
+
+  gap:8px;
+
+  border:1px solid #ffffff40;
+
+  background:#ffffff1c;
+
+  color:#fff;
+
+  padding:9px 16px 9px 12px;
+
+  border-radius:999px;
+
+  cursor:pointer;
+
+  font:
+    600 13px/1
+    var(--font-body);
+
+  backdrop-filter:blur(6px);
+
+  transition:.25s var(--ease);
+}
+
+.theme-toggle:hover{
+  background:#ffffff30;
+
+  transform:translateY(-1px);
+}
+
+.theme-toggle .ic{
+  font-size:16px;
+
+  transition:
+    transform .4s
+    var(--ease);
+}
+
+.theme-toggle:active .ic{
+  transform:rotate(25deg);
+}
+
+
+/* =========================================================
+   STAT ROW
+========================================================= */
+
+.stat-row{
+  position:relative;
+
+  max-width:1180px;
+
+  margin:26px auto 0;
+
+  display:flex;
+
+  gap:10px;
+
+  flex-wrap:wrap;
+}
+
+.stat{
+  padding:9px 14px;
+
+  border-radius:999px;
+
+  background:#ffffff1c;
+
+  border:1px solid #ffffff35;
+
+  font:
+    600 12.5px/1
+    var(--font-mono);
+
+  backdrop-filter:blur(6px);
+}
+
+
+/* =========================================================
+   QUOTE
+========================================================= */
+
+.quote-wrap{
+  max-width:1180px;
+
+  margin:22px auto 0;
+
+  padding:0 20px;
+}
+
+.quote-card{
+  position:relative;
+
+  padding:
+    20px
+    24px
+    20px
+    56px;
+
+  border-radius:
+    var(--radius-md);
+
+  background:
+    var(--surface);
+
+  border:
+    1px solid
+    var(--border);
+
+  box-shadow:
+    var(--shadow-sm);
+
+  min-height:64px;
+
+  display:flex;
+
+  align-items:center;
+
+  overflow:hidden;
+}
+
+.quote-card::before{
+  content:"\201C";
+
+  position:absolute;
+
+  left:14px;
+  top:2px;
+
+  font:
+    700 52px/1
+    var(--font-display);
+
+  color:
+    var(--accent);
+
+  opacity:.55;
+}
+
+.quote-text{
+  font:
+    500 15.5px/1.6
+    var(--font-display);
+
+  color:
+    var(--text);
+
+  opacity:0;
+
+  transform:
+    translateY(8px);
+
+  transition:
+    opacity .5s var(--ease),
+    transform .5s var(--ease);
+}
+
+.quote-text.show{
+  opacity:1;
+
+  transform:none;
+}
+
+.quote-author{
+  display:block;
+
+  margin-top:6px;
+
+  font:
+    600 12px/1
+    var(--font-mono);
+
+  color:
+    var(--text-faint);
+
+  letter-spacing:.03em;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main{
+  width:100%;
+  max-width:1180px;
+
+  margin:0 auto;
+
+  padding:
+    34px
+    18px
+    60px;
+}
+
+.section-head{
+  display:flex;
+
+  align-items:baseline;
+
+  justify-content:space-between;
+
+  gap:12px;
+
+  flex-wrap:wrap;
+
+  margin-bottom:20px;
+}
+
+.section-head h2{
+  margin:0;
+
+  font:
+    700 clamp(20px,3vw,26px)/1.25
+    var(--font-display);
+
+  letter-spacing:-.01em;
+
+  border-left:
+    5px solid
+    var(--accent);
+
+  padding-left:14px;
+}
+
+.section-sub{
+  margin:0;
+
+  color:
+    var(--text-muted);
+
+  font-size:14px;
+
+  max-width:440px;
+}
+
+
+/* =========================================================
+   TOPIC GRID
+   DESKTOP = EXACTLY 3 COLUMNS
+========================================================= */
+
+.grid{
+  width:100%;
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap:18px;
+
+  align-items:stretch;
+}
+
+
+/* =========================================================
+   TOPIC CARD
+========================================================= */
+
+.topic-card{
+  --d:0s;
+
+  position:relative;
+
+  display:flex;
+
+  flex-direction:column;
+
+  width:100%;
+
+  height:296px;
+
+  min-width:0;
+
+  text-align:left;
+
+  padding:
+    22px
+    20px
+    20px;
+
+  border-radius:
+    var(--radius-lg);
+
+  background:
+    var(--surface);
+
+  border:
+    1px solid
+    var(--border);
+
+  box-shadow:
+    var(--shadow-sm);
+
+  cursor:pointer;
+
+  overflow:hidden;
+
+  color:inherit;
+
+  text-decoration:none;
+
+  opacity:0;
+
+  transform:
+    translateY(18px);
+
+  transition:
+    transform .3s var(--ease),
+    box-shadow .3s var(--ease),
+    border-color .3s var(--ease);
+}
+
+.topic-card.in-view{
+  animation:
+    cardIn
+    .55s
+    var(--ease)
+    var(--d)
+    both;
+}
+
+@keyframes cardIn{
+
+  from{
+    opacity:0;
+
+    transform:
+      translateY(18px);
+  }
+
+  to{
+    opacity:1;
+
+    transform:none;
+  }
+
+}
+
+.topic-card:hover{
+  transform:
+    translateY(-5px);
+
+  box-shadow:
+    var(--shadow);
+
+  border-color:
+    var(--accent);
+}
+
+.topic-card::after{
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  border-radius:inherit;
+
+  padding:1px;
+
+  pointer-events:none;
+
+  opacity:0;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      transparent 60%
+    );
+
+  -webkit-mask:
+    linear-gradient(#000 0 0)
+    content-box,
+    linear-gradient(#000 0 0);
+
+  -webkit-mask-composite:xor;
+
+  mask-composite:exclude;
+
+  transition:
+    opacity .3s
+    var(--ease);
+}
+
+.topic-card:hover::after{
+  opacity:1;
+}
+
+
+/* =========================================================
+   CARD TOP
+========================================================= */
+
+.topic-top{
+  display:flex;
+
+  align-items:flex-start;
+
+  justify-content:space-between;
+
+  gap:10px;
+
+  flex:none;
+}
+
+.topic-num{
+  font:
+    700 12px/1
+    var(--font-mono);
+
+  color:
+    var(--text-faint);
+
+  letter-spacing:.05em;
+}
+
+
+/* =========================================================
+   TOPIC ICON
+========================================================= */
+
+.topic-icon{
+  width:46px;
+
+  height:46px;
+
+  border-radius:13px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:21px;
+
+  background:
+    var(--surface-2);
+
+  border:
+    1px solid
+    var(--border-soft);
+
+  margin-top:10px;
+
+  transition:
+    .3s
+    var(--ease);
+
+  flex:none;
+}
+
+.topic-card:hover .topic-icon{
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent-strong)
+    );
+
+  box-shadow:
+    0 0 20px
+    color-mix(
+      in srgb,
+      var(--accent) 55%,
+      transparent
+    );
+}
+
+
+/* =========================================================
+   CARD TITLE
+========================================================= */
+
+.topic-card h3{
+  margin:
+    14px
+    0
+    6px;
+
+  font:
+    700 16.5px/1.35
+    var(--font-display);
+
+  letter-spacing:
+    -.005em;
+
+  flex:none;
+
+  display:
+    -webkit-box;
+
+  -webkit-line-clamp:2;
+
+  -webkit-box-orient:
+    vertical;
+
+  overflow:hidden;
+
+  min-height:44.6px;
+}
+
+
+/* =========================================================
+   CARD DESCRIPTION
+========================================================= */
+
+.topic-card p{
+  margin:0;
+
+  font-size:13.5px;
+
+  line-height:1.6;
+
+  color:
+    var(--text-muted);
+
+  flex:
+    1 1 auto;
+
+  display:
+    -webkit-box;
+
+  -webkit-line-clamp:3;
+
+  -webkit-box-orient:
+    vertical;
+
+  overflow:hidden;
+}
+
+
+/* =========================================================
+   CARD BOTTOM
+========================================================= */
+
+.card-bottom{
+  display:flex;
+
+  align-items:center;
+
+  justify-content:
+    space-between;
+
+  gap:10px;
+
+  margin-top:14px;
+
+  flex:none;
+}
+
+.status{
+  display:inline-flex;
+
+  align-items:center;
+
+  gap:6px;
+
+  padding:
+    6px
+    11px;
+
+  border-radius:
+    999px;
+
+  font:
+    700 11px/1
+    var(--font-mono);
+
+  letter-spacing:
+    .03em;
+}
+
+.status.ready{
+  background:
+    var(--ready-bg);
+
+  color:
+    var(--ready-text);
+
+  border:
+    1px solid
+    var(--ready-border);
+}
+
+.status.soon{
+  background:
+    var(--soon-bg);
+
+  color:
+    var(--soon-text);
+
+  border:
+    1px solid
+    var(--soon-border);
+}
+
+.status .dot{
+  width:6px;
+
+  height:6px;
+
+  border-radius:50%;
+
+  background:
+    currentColor;
+}
+
+.status.ready .dot{
+  animation:
+    pulseDot
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+@keyframes pulseDot{
+
+  0%,100%{
+    opacity:1;
+  }
+
+  50%{
+    opacity:.35;
+  }
+
+}
+
+.arrow{
+  font-size:16px;
+
+  color:
+    var(--text-faint);
+
+  transition:
+    .3s
+    var(--ease);
+
+  flex:none;
+}
+
+.topic-card:hover .arrow{
+  color:
+    var(--accent);
+
+  transform:
+    translateX(4px);
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toast{
+  position:fixed;
+
+  left:50%;
+
+  bottom:26px;
+
+  transform:
+    translate(-50%,20px);
+
+  background:
+    var(--surface);
+
+  border:
+    1px solid
+    var(--border);
+
+  color:
+    var(--text);
+
+  padding:
+    12px
+    20px;
+
+  border-radius:
+    999px;
+
+  box-shadow:
+    var(--shadow);
+
+  font:
+    600 13.5px/1
+    var(--font-body);
+
+  opacity:0;
+
+  pointer-events:none;
+
+  transition:
+    .35s
+    var(--ease);
+
+  z-index:100;
+
+  white-space:nowrap;
+
+  max-width:
+    calc(100vw - 30px);
+}
+
+#toast.show{
+  opacity:1;
+
+  transform:
+    translate(-50%,0);
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer{
+  max-width:1180px;
+
+  margin:
+    10px
+    auto
+    0;
+
+  padding:
+    24px
+    18px
+    44px;
+
+  text-align:center;
+
+  color:
+    var(--text-faint);
+
+  font-size:13px;
+
+  border-top:
+    1px solid
+    var(--border-soft);
+}
+
+
+/* =========================================================
+   TABLET
+   2 CARDS PER ROW
+========================================================= */
+
+@media(max-width:900px){
+
+  .grid{
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap:14px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   1 CARD PER ROW
+========================================================= */
+
+@media(max-width:600px){
+
+  header{
+    padding:
+      30px
+      16px
+      26px;
+  }
+
+  .header-inner{
+    flex-direction:column;
+  }
+
+  .tagline{
+    font-size:14px;
+  }
+
+  .quote-wrap{
+    padding:0 12px;
+  }
+
+  .quote-card{
+    padding:
+      18px
+      18px
+      18px
+      46px;
+  }
+
+  .quote-card::before{
+    font-size:38px;
+
+    left:10px;
+  }
+
+  main{
+    padding:
+      26px
+      12px
+      50px;
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+
+    gap:12px;
+  }
+
+  .topic-card{
+    height:260px;
+
+    padding:
+      16px
+      14px;
+  }
+
+  .topic-icon{
+    width:42px;
+    height:42px;
+
+    font-size:19px;
+  }
+
+  .topic-card h3{
+    font-size:16px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media(prefers-reduced-motion:reduce){
+
+  *{
+    animation-duration:
+      .001ms!important;
+
+    animation-iteration-count:
+      1!important;
+
+    transition-duration:
+      .001ms!important;
+
+    scroll-behavior:
+      auto!important;
+  }
+
+  .topic-card{
+    opacity:1;
+
+    transform:none;
+  }
+
+}
+
+</style>
+</head>
+
+
+<body data-theme="dark">
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+  <div class="orb o1"></div>
+
+  <div class="orb o2"></div>
+
+
+  <svg
+    class="circuit"
+    viewBox="0 0 800 300"
+    preserveAspectRatio="none"
+    aria-hidden="true">
+
+    <path
+      d="M0 40H180Q200 40 200 60V120H400"/>
+
+    <path
+      d="M0 220H150Q170 220 170 200V150H500Q520 150 520 170V260H800"/>
+
+    <path
+      d="M600 0V70Q600 90 620 90H800"/>
+
+    <circle cx="200" cy="60" r="4"/>
+
+    <circle cx="400" cy="120" r="4"/>
+
+    <circle cx="520" cy="170" r="4"/>
+
+    <circle cx="620" cy="90" r="4"/>
+
+  </svg>
+
+
+  <div class="header-inner">
+
+    <div class="brand">
+
+      <div class="brand-mark">
+        ⚡
+      </div>
+
+      <div>
+
+        <p class="eyebrow">
+          Digital Electronics · Module 2
+        </p>
+
+        <h1>
+          Combinational Circuits
+        </h1>
+
+      </div>
+
+    </div>
+
+
+    <button
+      id="themeToggle"
+      class="theme-toggle"
+      aria-pressed="false">
+
+      <span
+        class="ic"
+        id="themeIcon">
+        🌙
+      </span>
+
+      <span id="themeLabel">
+        Dark
+      </span>
+
+    </button>
+
+  </div>
+
+
+  <p class="tagline">
+    Combinational logic has no memory — every output depends
+    only on the present inputs. This module builds that idea
+    up from a single XOR gate to full arithmetic units,
+    comparators, converters, encoders and multiplexers,
+    with a live interactive lab for every circuit.
+  </p>
+
+
+  <div class="stat-row">
+
+    <span class="stat">
+      📚 10 Topics
+    </span>
+
+    <span class="stat">
+      🧪 Interactive Labs
+    </span>
+
+    <span class="stat">
+      ⏱ Self-paced
+    </span>
+
+    <span class="stat">
+      🎓 Gate-level detail
+    </span>
+
+  </div>
+
+</header>
+
+
+<!-- =====================================================
+     QUOTE
+===================================================== -->
+
+<div class="quote-wrap">
+
+  <div class="quote-card">
+
+    <p
+      class="quote-text show"
+      id="quoteText">
+
+      The best way to understand a circuit is to watch its signal move.
+
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main>
+
+  <div class="section-head">
+
+    <h2>
+      Module Topics
+    </h2>
+
+    <p class="section-sub">
+      Tap any topic to open its interactive lab.
+      Green-dot topics are live right now —
+      the rest are on their way.
+    </p>
+
+  </div>
+
+
+  <div
+    class="grid"
+    id="grid">
+  </div>
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+  Module 2 · Combinational Circuits —
+  a self-paced interactive digital logic curriculum
+
+</footer>
+
+
+<div id="toast"></div>
+
+
+<script>
+
+/* =========================================================
+   TOPICS
+========================================================= */
+
+const topics=[
+
+  {
+    icon:'📘',
+    title:'Introduction to Combinational Circuits',
+    desc:'What makes a circuit combinational, how it differs from sequential logic, and why it has no memory of the past.',
+    href:'Comb.html',
+    ready:true
+  },
+
+  {
+    icon:'⊕',
+    title:'Half Adder, Full Adder, Half & Full Subtractor',
+    desc:'Build binary addition and subtraction gate-by-gate with live truth tables, Boolean expressions and animated signal flow.',
+    href:'Adder.html',
+    ready:true
+  },
+
+  {
+    icon:'🔢',
+    title:'4-Bit Adder, Subtractor & Adder/Subtractor',
+    desc:'Cascade Full Adders into a ripple-carry adder, a 2’s complement subtractor, and a combined XOR-controlled unit.',
+    href:'4Bit_Arithmetic_Lab.html',
+    ready:true
+  },
+
+  {
+    icon:'⚖️',
+    title:'Magnitude Comparator',
+    desc:'Compare two binary numbers bit by bit to decide A>B, A=B or A<B using cascaded comparison logic.',
+    href:'Mag.html',
+    ready:true
+  },
+
+  {
+    icon:'🔁',
+    title:'Code Converters',
+    desc:'Convert between Binary, Gray, BCD and Excess-3 codes and see each bit transform live.',
+    href:'Code_Converters.html',
+    ready:true
+  },
+
+  {
+    icon:'✅',
+    title:'Parity Generator and Checker',
+    desc:'Detect single-bit transmission errors using even/odd parity generation and checking circuits.',
+    href:'Parity.html',
+    ready:true
+  },
+
+  {
+    icon:'🔐',
+    title:'Encoders & Decoders',
+    desc:'Compress multiple inputs into fewer output lines, and expand codes back out — the reverse of one another.',
+    href:'Encoders_Decoders.html',
+    ready:true
+  },
+
+  {
+    icon:'🔀',
+    title:'Multiplexer & Demultiplexer',
+    desc:'Route one of many inputs to a single output, and one input to many outputs, using select lines.',
+    href:'Multiplexer_Demultiplexer.html',
+    ready:true
+  },
+
+  {
+    icon:'🧩',
+    title:'Function Realization using Multiplexer',
+    desc:'Implement any Boolean function directly on a multiplexer’s data and select lines — no separate gates needed.',
+    href:'Function_Realization_Multiplexer.html',
+    ready:false
+  },
+
+  {
+    icon:'🧠',
+    title:'Function Realization using Decoder',
+    desc:'Use a decoder’s minterm outputs, combined with OR gates, to realize any Boolean function.',
+    href:'Function_Realization_Decoder.html',
+    ready:false
+  }
+
+];
+
+
+/* =========================================================
+   GENERATE TOPIC CARDS
+========================================================= */
+
+const grid=
+  document.getElementById('grid');
+
+
+grid.innerHTML=
+  topics.map((t,i)=>`
+
+  <a
+    class="topic-card"
+    style="--d:${(i*0.05).toFixed(2)}s"
+    href="${t.href}"
+    data-ready="${t.ready}"
+    data-title="${t.title.replace(/"/g,'&quot;')}">
+
+    <div class="topic-top">
+
+      <span class="topic-num">
+
+        ${String(i+1).padStart(2,'0')}
+        /
+        ${String(topics.length).padStart(2,'0')}
+
+      </span>
+
+    </div>
+
+
+    <div class="topic-icon">
+
+      ${t.icon}
+
+    </div>
+
+
+    <h3>
+
+      ${t.title}
+
+    </h3>
+
+
+    <p>
+
+      ${t.desc}
+
+    </p>
+
+
+    <div class="card-bottom">
+
+      <span
+        class="status
+        ${t.ready?'ready':'soon'}">
+
+        <span class="dot"></span>
+
+        ${t.ready
+          ?'Open Lab'
+          :'Coming Soon'
+        }
+
+      </span>
+
+
+      <span class="arrow">
+
+        →
+
+      </span>
+
+    </div>
+
+  </a>
+
+`).join('');
+
+
+/* =========================================================
+   COMING SOON HANDLER
+========================================================= */
+
+grid
+.querySelectorAll('.topic-card')
+.forEach(card=>{
+
+  card.addEventListener(
+    'click',
+    e=>{
+
+      if(
+        card.dataset.ready
+        ===
+        'false'
+      ){
+
+        e.preventDefault();
+
+        showToast(
+          `🚧 “${card.dataset.title}” lab is coming soon`
+        );
+
+      }
+
+    }
+  );
+
+});
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(msg){
+
+  const el=
+    document.getElementById(
+      'toast'
+    );
+
+  el.textContent=msg;
+
+  el.classList.add(
+    'show'
+  );
+
+  clearTimeout(
+    showToast._t
+  );
+
+  showToast._t=
+    setTimeout(
+      ()=>{
+        el.classList.remove(
+          'show'
+        );
+      },
+      2200
+    );
+
+}
+
+
+/* =========================================================
+   CARD ANIMATION
+========================================================= */
+
+const io=
+  new IntersectionObserver(
+    entries=>{
+
+      entries.forEach(
+        en=>{
+
+          if(
+            en.isIntersecting
+          ){
+
+            en.target
+              .classList
+              .add(
+                'in-view'
+              );
+
+            io.unobserve(
+              en.target
+            );
+
+          }
+
+        }
+      );
+
+    },
+    {
+      threshold:.15
+    }
+  );
+
+
+grid
+.querySelectorAll(
+  '.topic-card'
+)
+.forEach(
+  c=>
+    io.observe(c)
+);
+
+
+/* =========================================================
+   QUOTES
+========================================================= */
+
+const quotes=[
+
+  [
+    "The best way to understand a circuit is to watch its signal move.",
+    "Digital Logic Lab"
+  ],
+
+  [
+    "Logic will get you from A to B. Imagination will take you everywhere.",
+    "Albert Einstein"
+  ],
+
+  [
+    "Computers are good at following instructions, but not at reading your mind.",
+    "Donald Knuth"
+  ],
+
+  [
+    "The chief function of the computer is to do arithmetic — every gate you see here is doing exactly that.",
+    "Digital Logic Lab"
+  ],
+
+  [
+    "Simplicity is the soul of efficiency — a Boolean expression fully reduced is a circuit fully understood.",
+    "Digital Logic Lab"
+  ],
+
+  [
+    "Before software, there was switching — every AND, OR and NOT is a decision frozen in silicon.",
+    "Digital Logic Lab"
+  ],
+
+  [
+    "Every complex processor is, underneath, a very large pile of very simple gates.",
+    "Digital Logic Lab"
+  ],
+
+  [
+    "An expert is a person who has made all the mistakes that can be made in a very narrow field.",
+    "Niels Bohr"
+  ]
+
+];
+
+
+let qi=0;
+
+const qEl=
+  document.getElementById(
+    'quoteText'
+  );
+
+
+function renderQuote(i){
+
+  const [
+    text,
+    author
+  ]=
+  quotes[i];
+
+
+  qEl
+    .classList
+    .remove(
+      'show'
+    );
+
+
+  setTimeout(
+    ()=>{
+
+      qEl.innerHTML=
+        `${text}
+        <span class="quote-author">
+        — ${author}
+        </span>`;
+
+      qEl
+        .classList
+        .add(
+          'show'
+        );
+
+    },
+    260
+  );
+
+}
+
+
+renderQuote(0);
+
+
+setInterval(
+  ()=>{
+
+    qi=
+      (qi+1)
+      %
+      quotes.length;
+
+    renderQuote(
+      qi
+    );
+
+  },
+  4800
+);
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+const bodyEl=
+  document.body;
+
+const themeToggle=
+  document.getElementById(
+    'themeToggle'
+  );
+
+const themeIcon=
+  document.getElementById(
+    'themeIcon'
+  );
+
+const themeLabel=
+  document.getElementById(
+    'themeLabel'
+  );
+
+
+let theme=
+  (
+    window.matchMedia
+    &&
+    matchMedia(
+      '(prefers-color-scheme: light)'
+    ).matches
+  )
+  ?
+  'light'
+  :
+  'dark';
+
+
+function applyTheme(t){
+
+  bodyEl
+    .setAttribute(
+      'data-theme',
+      t
+    );
+
+  themeToggle
+    .setAttribute(
+      'aria-pressed',
+      t==='light'
+    );
+
+  themeIcon.textContent=
+    t==='dark'
+    ?
+    '🌙'
+    :
+    '☀️';
+
+  themeLabel.textContent=
+    t==='dark'
+    ?
+    'Dark'
+    :
+    'Light';
+
+}
+
+
+applyTheme(
+  theme
+);
+
+
+themeToggle
+.addEventListener(
+  'click',
+  ()=>{
+
+    theme=
+      theme==='dark'
+      ?
+      'light'
+      :
+      'dark';
+
+    applyTheme(
+      theme
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decoder & Encoder Interactive Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --amber:#f59e0b;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  --on:#48e0b2;
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --amber:#d97706;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  --on:#0ab886;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;overflow-x:hidden;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:linear-gradient(var(--bg-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;background-position:center top;min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease)}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+header{position:relative;overflow:hidden;padding:38px 18px 30px;color:#fff;background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));background-size:220% 220%;animation:bgshift 12s ease infinite}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+.wrap,main{max-width:1180px;margin:auto;min-width:0}
+.head{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:50px;height:50px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff40;display:flex;align-items:center;justify-content:center;font-size:23px;backdrop-filter:blur(6px);box-shadow:0 0 24px #ffffff30;flex:none}
+.eyebrow{margin:0 0 3px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.88}
+h1{margin:0;font:700 clamp(24px,4vw,36px)/1.15 var(--font-display);letter-spacing:-.01em}
+header p.tagline{position:relative;line-height:1.7;opacity:.92;font-size:15px;max-width:840px;margin:16px 0 0}
+.theme-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);backdrop-filter:blur(6px);transition:.25s var(--ease)}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+.stat-row{position:relative;margin:20px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+.stat{padding:8px 13px;border-radius:999px;background:#ffffff1c;border:1px solid #ffffff35;font:600 12px/1 var(--font-mono);backdrop-filter:blur(6px)}
+
+.quote-wrap{max-width:1180px;margin:20px auto 0;padding:0 18px}
+.quote-card{position:relative;padding:18px 22px 18px 52px;border-radius:var(--radius-md);background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm);min-height:56px;display:flex;align-items:center;overflow:hidden}
+.quote-card::before{content:"\201C";position:absolute;left:12px;top:0;font:700 46px/1 var(--font-display);color:var(--accent);opacity:.55}
+.quote-text{font:500 14.5px/1.6 var(--font-display);color:var(--text);opacity:0;transform:translateY(8px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.quote-text.show{opacity:1;transform:none}
+.quote-author{display:block;margin-top:5px;font:600 11.5px/1 var(--font-mono);color:var(--text-faint)}
+
+nav{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg),var(--bg) 75%,transparent);padding:12px 0}
+#nav{max-width:1180px;margin:auto;padding:0 14px;display:flex;gap:9px;overflow:auto;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);padding:11px 16px;border-radius:999px;font:600 13.5px/1 var(--font-display);cursor:pointer;white-space:nowrap;transition:.25s var(--ease);box-shadow:var(--shadow-sm);flex:none}
+.btn:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.btn.active{background:linear-gradient(120deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;transform:translateY(-2px);box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+
+main{padding:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;min-width:0}
+.card{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:19px;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);animation:cardIn .5s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.card h2{margin-top:0;font-family:var(--font-display);font-size:19px;border-left:5px solid var(--accent);padding-left:11px}
+.card h3{margin-top:0;font-family:var(--font-display);font-size:16.5px;border-left:5px solid var(--accent);padding-left:11px}
+.card p{color:var(--text-muted);line-height:1.7;font-size:14.5px}
+.card ul{color:var(--text-muted);line-height:1.75;font-size:14.5px;margin:8px 0;padding-left:20px}
+.full{grid-column:1/-1}
+.tag{color:var(--accent);font:700 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:stretch}
+.step{display:flex;flex-direction:column;height:100%}
+.step,.note{background:var(--surface-2);border:1px solid var(--border-soft);padding:13px;border-radius:13px;color:var(--text-muted);font-size:14px;line-height:1.6}
+.step b{color:var(--text)}
+.note{border-left:5px solid var(--brand-b)}
+.note b{color:var(--text)}
+
+.controls{display:flex;gap:7px;flex-wrap:wrap}
+.bit{border:1px solid var(--border);background:var(--surface-2);color:var(--text-muted);padding:10px 14px;border-radius:12px;font:700 13px var(--font-mono);cursor:pointer;transition:.25s var(--ease)}
+.bit.on{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;box-shadow:0 0 16px color-mix(in srgb, var(--accent) 55%, transparent)}
+.box{overflow:auto;border:1px solid var(--border);border-radius:16px;margin-top:12px;padding:8px;background:var(--surface-2)}
+.box svg{display:block;width:100%;min-width:0;height:auto;max-height:440px}
+.logic{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.logic svg{width:100%;height:auto;max-height:none}
+
+.w{stroke:var(--wire-off);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s,filter .2s}
+.w.on{stroke:var(--accent);stroke-width:5;filter:drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 80%, transparent))}
+.gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.4}
+.block{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+.t{fill:var(--ink);font:700 15px var(--font-mono)}
+.sm{font-size:11px}
+.p{fill:var(--text-faint);transition:fill .2s}
+.p.on{fill:var(--on);filter:drop-shadow(0 0 5px var(--on))}
+
+.tw{overflow:auto;border:1px solid var(--border);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:470px;font-family:var(--font-mono);font-size:13.5px}
+th,td{padding:9px;text-align:center;border-bottom:1px solid var(--border);color:var(--text-muted)}
+th{background:var(--surface-2);color:var(--text-faint)}
+tr{cursor:pointer;transition:background .2s var(--ease)}
+tr:hover td{background:var(--surface-hover)}
+tr.sel{background:color-mix(in srgb, var(--accent) 16%, transparent)}
+tr.sel td{box-shadow:inset 0 1px 0 var(--accent)}
+td.hi{color:var(--on);font-weight:900}
+.eq{font:700 1.02rem var(--font-mono);background:var(--surface-2);border:1px solid var(--border-soft);color:var(--text);padding:11px 13px;border-radius:11px;margin:8px 0}
+
+.switches{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sw{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);padding:8px 12px;border-radius:14px;font:700 13px var(--font-mono);color:var(--text-muted);cursor:pointer;transition:.25s var(--ease)}
+.sw:hover{border-color:var(--accent)}
+.swtrack{width:42px;height:23px;border-radius:20px;background:var(--track);position:relative;transition:.25s var(--ease);flex:none}
+.swtrack:after{content:'';position:absolute;width:17px;height:17px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.25s var(--ease)}
+.sw.on{color:var(--text)}
+.sw.on .swtrack{background:linear-gradient(135deg,var(--accent),var(--accent-strong));box-shadow:0 0 12px color-mix(in srgb, var(--accent) 65%, transparent)}
+.sw.on .swtrack:after{transform:translateX(19px)}
+.dice{border:1px solid var(--border);background:var(--surface-2);color:var(--text-muted);padding:8px 13px;border-radius:14px;font:700 13px var(--font-display);cursor:pointer;transition:.25s var(--ease)}
+.dice:hover{border-color:var(--accent);color:var(--text);transform:translateY(-2px)}
+
+.fabs{position:fixed;right:18px;bottom:18px;z-index:50}
+.fab{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;box-shadow:var(--shadow);transition:.25s var(--ease);opacity:0;transform:translateY(10px) scale(.9);pointer-events:none}
+.fab.show{opacity:1;transform:none;pointer-events:auto}
+.fab:hover{transform:translateY(-3px) scale(1.05);border-color:var(--accent)}
+
+footer{max-width:1180px;margin:10px auto 0;padding:24px 18px 44px;text-align:center;color:var(--text-faint);font-size:13px;border-top:1px solid var(--border-soft)}
+
+@media(max-width:760px){
+  .grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .card{padding:14px;border-radius:16px}
+  main{padding:9px}
+  .box svg{min-width:0}
+  .logic svg{width:auto!important;min-width:760px!important;max-width:none!important;height:auto;max-height:none}
+  .logic{padding:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .box:not(.logic) svg{width:100%;min-width:0;max-height:300px}
+  header{padding:26px 16px 22px}
+  .head{flex-direction:column}
+  .quote-card{padding:16px 16px 16px 44px}
+  .quote-card::before{font-size:34px;left:9px}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">
+        <div class="brand-mark">🔐</div>
+        <div><p class="eyebrow">Digital Electronics · Module 2</p><h1>Decoders &amp; Encoders</h1></div>
+      </div>
+      <button id="themeToggle" class="theme-toggle" aria-pressed="false"><span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span></button>
+    </div>
+    <p class="tagline">Concept → application → block diagram → truth table → Boolean expression → gate-level logic. Tap inputs or table rows to trace live signal flow — every wire runs cleanly into the block, whether it's a 1:2 decoder or a full 3:8.</p>
+    <div class="stat-row">
+      <span class="stat">📚 6 Circuits</span>
+      <span class="stat">🔌 Live Signal Flow</span>
+      <span class="stat">🎲 Randomizer</span>
+      <span class="stat">🎓 Gate-level detail</span>
+    </div>
+  </div>
+</header>
+
+<div class="quote-wrap"><div class="quote-card"><p class="quote-text show" id="quoteText">A decoder turns an address into an answer.</p></div></div>
+
+<nav><div id="nav"></div></nav>
+<main class="wrap"><div class="grid">
+<div class="card"><h2>Decoder</h2><p>A combinational circuit that converts <b>n binary inputs</b> into a maximum of <b>2ⁿ outputs</b>. In an active-high decoder, one output is selected for each input code.</p><div class="eq">n inputs → 2ⁿ outputs</div><b>Applications</b><ul><li>Memory/address decoding</li><li>Chip and device selection</li><li>Instruction decoding</li><li>Demultiplexing/control generation</li></ul></div>
+<div class="card"><h2>Encoder</h2><p>The reverse function of a decoder. A conventional encoder converts one active line among <b>2ⁿ inputs</b> into an <b>n-bit binary code</b>.</p><div class="eq">2ⁿ inputs → n outputs</div><b>Applications</b><ul><li>Keyboard/keypad encoding</li><li>Octal-to-binary conversion</li><li>Interrupt-source encoding</li><li>Data transmission</li></ul><div class="note">Basic encoders assume one input is HIGH at a time. Multiple simultaneous HIGH inputs require a priority encoder.</div></div>
+<div class="card full"><h2>How to Draw</h2><div class="steps"><div class="step"><b>1. Block</b><br>Label all inputs and outputs.</div><div class="step"><b>2. Truth Table</b><br>List every valid condition.</div><div class="step"><b>3. Expression</b><br>Derive each output equation.</div><div class="step"><b>4. Logic</b><br>Implement with NOT/AND/OR gates.</div></div></div></div>
+<div id="lab" style="margin-top:18px"></div></main>
+
+<footer>Module 2 · Combinational Circuits — Decoder &amp; Encoder Lab</footer>
+<div class="fabs"><button class="fab" id="topBtn" title="Back to top">↑</button></div>
+
+<script>
+const C=[
+['d12','decoder','1:2 Decoder',['A'],['D0','D1'],['D0 = A̅','D1 = A'],'One input selects one of two outputs.','Line selection and 1-to-2 control routing.'],
+['d24','decoder','2:4 Decoder',['A','B'],['D0','D1','D2','D3'],['D0 = A̅B̅','D1 = A̅B','D2 = AB̅','D3 = AB'],'Two input bits select one of four outputs.','Memory/register selection and 1-of-4 control.'],
+['d38','decoder','3:8 Decoder',['A','B','C'],['D0','D1','D2','D3','D4','D5','D6','D7'],['D0 = A̅B̅C̅','D1 = A̅B̅C','D2 = A̅BC̅','D3 = A̅BC','D4 = AB̅C̅','D5 = AB̅C','D6 = ABC̅','D7 = ABC'],'Three input bits select one of eight outputs.','Octal decoding and 1-of-8 device/address selection.'],
+['e21','encoder','2:1 Encoder',['D0','D1'],['A'],['A = D1'],'One of two one-hot inputs becomes a 1-bit code.','Basic one-hot to binary conversion.'],
+['e42','encoder','4:2 Encoder',['D0','D1','D2','D3'],['A','B'],['A = D2 + D3','B = D1 + D3'],'One of four inputs becomes a 2-bit binary code.','Keypad encoding and line reduction.'],
+['e83','encoder','8:3 Encoder',['D0','D1','D2','D3','D4','D5','D6','D7'],['A','B','C'],['A = D4 + D5 + D6 + D7','B = D2 + D3 + D6 + D7','C = D1 + D3 + D5 + D7'],'One of eight inputs becomes its 3-bit binary index.','Octal-to-binary and interrupt-source encoding.']
+].map(x=>({id:x[0],type:x[1],title:x[2],ins:x[3],outs:x[4],eq:x[5],desc:x[6],apps:x[7]}));
+let cur='d12',S={};
+const R=c=>{let a=[];if(c.type==='decoder')for(let n=0;n<2**c.ins.length;n++){let i=[...n.toString(2).padStart(c.ins.length,'0')].map(Number);a.push({i,o:c.outs.map((_,k)=>+(k===n))})}else for(let n=0;n<c.ins.length;n++){let i=c.ins.map((_,k)=>+(k===n));a.push({i,o:[...n.toString(2).padStart(c.outs.length,'0')].map(Number)})}return a};
+const O=(c,s)=>c.type==='decoder'?c.outs.map((_,k)=>+(k===parseInt(s.join(''),2))):[...Math.max(0,s.findIndex(Boolean)).toString(2).padStart(c.outs.length,'0')].map(Number);
+function block(c,s,o){
+ let H=Math.max(220,65+Math.max(c.ins.length,c.outs.length)*28);
+ let by=28,bh=H-56;
+ let f=(arr,left,vals)=>arr.map((z,i)=>{
+   let y=by+(i+1)*bh/(arr.length+1),x1=left?48:390,x2=left?210:555;
+   return `<text x="${left?12:566}" y="${y+5}" class="t">${z}</text>
+   <path class="w ${vals[i]?'on':''}" d="M${x1} ${y}H${x2}" marker-end="url(#arr)"/>
+   <circle cx="${left?48:555}" cy="${y}" r="5" class="p ${vals[i]?'on':''}"/>`
+ }).join('');
+ return `<svg viewBox="0 0 620 ${H}" preserveAspectRatio="xMidYMid meet">
+ <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--wire-off)"/></marker></defs>
+ ${f(c.ins,1,s)}
+ <rect x="210" y="${by}" width="180" height="${bh}" rx="18" class="block"/>
+ <text x="300" y="${H/2-12}" text-anchor="middle" class="t">${c.title}</text>
+ <text x="300" y="${H/2+14}" text-anchor="middle" class="t sm">${c.type.toUpperCase()}</text>
+ <text x="225" y="${H/2+38}" class="t sm">INPUT</text><text x="342" y="${H/2+38}" class="t sm">OUTPUT</text>
+ ${f(c.outs,0,o)}</svg>`
+}
+function andg(x,y,n){let h=Math.max(38,n*11+16),t=y-h/2;return `<path class="gate" d="M${x} ${t}h32a${h/2} ${h/2} 0 010 ${h}h-32z"/><text x="${x+28}" y="${y+4}" text-anchor="middle" class="t sm">AND</text>`}
+function org(x,y,n){let h=Math.max(40,n*11+16),t=y-h/2;return `<path class="gate" d="M${x} ${t}Q${x+25} ${y} ${x} ${t+h}Q${x+55} ${t+h-2} ${x+75} ${y}Q${x+55} ${t+2} ${x} ${t}Z"/><text x="${x+40}" y="${y+4}" text-anchor="middle" class="t sm">OR</text>`}
+function notg(x,y,on){return `<path class="gate" d="M${x} ${y-16}L${x} ${y+16}L${x+34} ${y}Z"/><circle cx="${x+40}" cy="${y}" r="6" class="gate"/><path class="w ${on?'on':''}" d="M${x+46} ${y}H${x+70}"/><text x="${x+16}" y="${y+4}" class="t sm">NOT</text>`}
+function logic(c,s,o){
+ let W=900,H=c.type==='decoder'?Math.max(340,c.outs.length*58+100):Math.max(300,c.outs.length*95+90);
+ let q=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">`;
+ if(c.type==='decoder'){
+   let tx=[],cx=[],gateX=690,outX=850;
+   c.ins.forEach((z,i)=>{
+     tx[i]=55+i*180; cx[i]=tx[i]+82;
+     let ny=42+i*38;
+     q+=`<text x="${tx[i]}" y="18" text-anchor="middle" class="t">${z}</text>
+         <text x="${cx[i]}" y="18" text-anchor="middle" class="t">${z}̅</text>
+         <path class="w ${s[i]?'on':''}" d="M${tx[i]} 28V${H-24}"/>
+         <path class="w ${s[i]?'on':''}" d="M${tx[i]} ${ny}H${tx[i]+18}"/>
+         <path class="gate" d="M${tx[i]+18} ${ny-11}L${tx[i]+18} ${ny+11}L${tx[i]+43} ${ny}Z"/>
+         <circle cx="${tx[i]+49}" cy="${ny}" r="6" class="gate"/>
+         <path class="w ${!s[i]?'on':''}" d="M${tx[i]+55} ${ny}H${cx[i]}V${H-24}"/>
+         <text x="${tx[i]+29}" y="${ny-14}" class="t sm">NOT</text>`;
+   });
+   c.outs.forEach((z,k)=>{
+     let y=78+k*56,b=[...k.toString(2).padStart(c.ins.length,'0')].map(Number);
+     b.forEach((v,i)=>{
+       let source=v?tx[i]:cx[i];
+       let pinY=y+(i-(b.length-1)/2)*11;
+       q+=`<path class="w ${o[k]?'on':''}" d="M${source} ${pinY}H${gateX}"/>`;
+     });
+     q+=andg(gateX,y,b.length);
+     q+=`<path class="w ${o[k]?'on':''}" d="M${gateX+65} ${y}H${outX}"/><text x="${outX+8}" y="${y+5}" class="t">${z}</text>`;
+   });
+ }else{
+   let sx=65,gateX=690,outX=850;
+   let ys=c.ins.map((_,i)=>45+i*(H-75)/Math.max(1,c.ins.length-1));
+   c.ins.forEach((z,i)=>q+=`<text x="12" y="${ys[i]+5}" class="t">${z}</text><path class="w ${s[i]?'on':''}" d="M${sx} ${ys[i]}H105"/>`);
+   c.outs.forEach((z,j)=>{
+     let y=78+j*100,T=[];
+     for(let k=0;k<c.ins.length;k++)if([...k.toString(2).padStart(c.outs.length,'0')].map(Number)[j])T.push(k);
+     T.forEach((k,t)=>{
+       let lane=125+t*105,pinY=y+(t-(T.length-1)/2)*12;
+       q+=`<path class="w ${s[k]?'on':''}" d="M105 ${ys[k]}H${lane}V${pinY}H${gateX}"/>`;
+     });
+     if(T.length>1)q+=org(gateX,y,T.length);else q+=`<path class="w ${o[j]?'on':''}" d="M${gateX} ${y}H${gateX+75}"/>`;
+     q+=`<path class="w ${o[j]?'on':''}" d="M${gateX+75} ${y}H${outX}"/><text x="${outX+8}" y="${y+5}" class="t">${z}</text>`;
+   });
+ }
+ return q+'</svg>';
+}
+function inp(i){let c=C.find(x=>x.id===cur);if(c.type==='decoder')S[cur][i]^=1;else{S[cur].fill(0);S[cur][i]=1}render()}
+function row(i){S[cur]=R(C.find(x=>x.id===cur))[i].i.slice();render()}
+function randomize(){let c=C.find(x=>x.id===cur),rs=R(c),i=Math.floor(Math.random()*rs.length);row(i)}
+function render(){let c=C.find(x=>x.id===cur);if(!S[cur])S[cur]=c.type==='decoder'?Array(c.ins.length).fill(0):[1,...Array(c.ins.length-1).fill(0)];let s=S[cur],o=O(c,s),rs=R(c),sel=rs.findIndex(r=>r.i.join()==s.join());
+nav.innerHTML=C.map(x=>`<button class="btn ${x.id===cur?'active':''}" onclick="cur='${x.id}';render()">${x.title}</button>`).join('');
+lab.innerHTML=`<div class="grid"><div class="card full"><div class="tag">${c.type.toUpperCase()}</div><h2>${c.title}</h2><p>${c.desc}</p><p><b>Application:</b> ${c.apps}</p></div>
+<div class="card"><h3>Step 1 — Block Diagram</h3><p>Tap an input to change the live circuit.</p><div class="switches">${c.ins.map((z,i)=>`<button class="sw ${s[i]?'on':''}" onclick="inp(${i})"><span>${z} = ${s[i]}</span><span class="swtrack"></span></button>`).join('')}<button class="dice" onclick="randomize()">🎲 Randomize</button></div><div class="box">${block(c,s,o)}</div></div>
+<div class="card"><h3>Step 2 — Truth Table</h3><p>Tap a row to apply that condition.</p><div class="tw"><table><thead><tr>${c.ins.concat(c.outs).map(z=>`<th>${z}</th>`).join('')}</tr></thead><tbody>${rs.map((r,i)=>`<tr class="${i===sel?'sel':''}" onclick="row(${i})">${r.i.concat(r.o).map(v=>`<td class="${v?'hi':''}">${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>
+<div class="card full"><h3>Step 3 — Logic Expressions</h3>${c.eq.map(x=>`<div class="eq">${x}</div>`).join('')}<div class="note">${c.type==='decoder'?'For each output, write the minterm corresponding to its input code. A 0 requires the complemented variable; a 1 uses the true variable. AND the literals.':'For each output bit, identify the one-hot input positions whose binary code contains 1 in that bit. OR those input lines.'}</div></div>
+<div class="card full"><h3>Step 4 — Interactive Logic Diagram</h3><p>Decoder diagrams use a dedicated NOT-gate bank to generate complemented inputs before the AND gates. Active HIGH paths glow through true/complement rails and gate outputs. Encoder inputs use one-hot switches. The complete SVG automatically scales to fit mobile screens.</p><div class="note" style="margin:10px 0">On mobile, swipe the logic diagram left/right to inspect the complete circuit at a readable size.</div><div class="box logic">${logic(c,s,o)}</div></div></div>`}
+render();
+
+/* Rotating quotes */
+const quotes=[
+ ["A decoder turns an address into an answer.","Digital Logic Lab"],
+ ["An encoder is a decoder run backwards through time.","Digital Logic Lab"],
+ ["Every complex processor is, underneath, a very large pile of very simple gates.","Digital Logic Lab"],
+ ["Logic is the anatomy of thought.","John Locke"],
+ ["Simplicity is the soul of efficiency — a Boolean expression fully reduced is a circuit fully understood.","Digital Logic Lab"],
+ ["One-hot today, binary tomorrow.","Digital Logic Lab"],
+ ["Computers are good at following instructions, but not at reading your mind.","Donald Knuth"],
+ ["An expert is a person who has made all the mistakes that can be made in a very narrow field.","Niels Bohr"],
+];
+let qi=0;const qEl=document.getElementById('quoteText');
+function renderQuote(i){const [text,author]=quotes[i];qEl.classList.remove('show');setTimeout(()=>{qEl.innerHTML=text+'<span class="quote-author">— '+author+'</span>';qEl.classList.add('show')},260)}
+renderQuote(0);setInterval(()=>{qi=(qi+1)%quotes.length;renderQuote(qi)},5000);
+
+/* Theme toggle */
+const bodyEl=document.body,themeToggle=document.getElementById('themeToggle'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){bodyEl.setAttribute('data-theme',t);themeToggle.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)});
+
+/* Back to top */
+const topBtn=document.getElementById('topBtn');
+window.addEventListener('scroll',()=>{topBtn.classList.toggle('show',window.scrollY>420)});
+topBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>

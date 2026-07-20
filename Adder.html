@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adder & Subtractor Circuit Lab — Interactive Logic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560; --wire-off-glow:transparent;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438; --knob:#2b3652;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce; --wire-off-glow:transparent;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7; --knob:#ffffff;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:
+    linear-gradient(var(--bg-grid-line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;
+  background-position:center top;
+  min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease);
+}
+::selection{background:var(--accent);color:var(--accent-ink)}
+a{color:var(--brand-b)}
+
+/* ============ HEADER ============ */
+header{
+  position:relative;overflow:hidden;padding:38px 20px 30px;color:#fff;
+  background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));
+  background-size:220% 220%;animation:bgshift 12s ease infinite;
+}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+header svg.circuit{position:absolute;inset:0;width:100%;height:100%;opacity:.22;pointer-events:none}
+header svg.circuit path{stroke:#fff;stroke-width:1.4;fill:none;stroke-dasharray:6 10;animation:travel 6s linear infinite}
+header svg.circuit circle{fill:#fff;animation:blink 2.6s ease-in-out infinite}
+@keyframes travel{to{stroke-dashoffset:-160}}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+.header-inner{position:relative;max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:52px;height:52px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff40;
+  display:flex;align-items:center;justify-content:center;font-size:24px;backdrop-filter:blur(6px);
+  box-shadow:0 0 24px #ffffff30;flex:none;
+}
+.eyebrow{margin:0 0 4px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+header h1{margin:0;font:700 clamp(24px,4vw,34px)/1.15 var(--font-display);letter-spacing:-.01em}
+.tagline{position:relative;max-width:760px;margin:18px auto 0;line-height:1.65;opacity:.92;font-size:15px}
+.theme-toggle{
+  display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;
+  padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);
+  backdrop-filter:blur(6px);transition:.25s var(--ease);
+}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle .ic{font-size:16px;transition:transform .4s var(--ease)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+
+/* ============ LAYOUT ============ */
+main{max-width:1180px;margin:auto;padding:16px 18px 60px}
+
+.tabs-wrap{position:sticky;top:0;z-index:30;padding:12px 0;margin-bottom:6px;
+  background:linear-gradient(var(--bg),var(--bg) 70%,transparent);
+}
+.tabs{
+  display:flex;gap:9px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:thin;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tabs button{
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
+  padding:11px 16px;border-radius:999px;cursor:pointer;font:600 13.5px/1 var(--font-display);
+  white-space:nowrap;display:flex;align-items:center;gap:7px;transition:.25s var(--ease);
+  box-shadow:var(--shadow-sm);flex:none;
+}
+.tabs button .glyph{font-family:var(--font-mono);font-weight:700;font-size:12px;
+  width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--surface-2);color:var(--text-faint);transition:.25s var(--ease);
+}
+.tabs button:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.tabs button.active{
+  color:var(--accent-ink);background:linear-gradient(120deg,var(--accent),var(--accent-strong));
+  border-color:transparent;transform:translateY(-2px);
+  box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.tabs button.active .glyph{background:#ffffff55;color:var(--accent-ink)}
+
+.panel{display:none}
+.panel.active{display:block;animation:enter .45s var(--ease)}
+@keyframes enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px;margin:16px 0;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);
+  animation:cardIn .5s var(--ease) both;
+}
+.card:nth-of-type(1){animation-delay:.02s}.card:nth-of-type(2){animation-delay:.08s}
+.card:nth-of-type(3){animation-delay:.14s}.card:nth-of-type(4){animation-delay:.2s}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+
+.title{border-left:5px solid var(--accent);padding-left:12px;font-family:var(--font-display);
+  font-weight:700;letter-spacing:-.01em;margin-top:0}
+h2.title{font-size:22px}
+
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.box{padding:16px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border-soft);
+  transition:.25s var(--ease)}
+.box:hover{border-color:var(--accent);background:var(--surface-hover)}
+.box h4{margin:0 0 8px;font-family:var(--font-display);font-size:14.5px;color:var(--brand-b);letter-spacing:.01em}
+[data-theme="light"] .box h4{color:#4338ca}
+.box p{line-height:1.65;color:var(--text-muted);margin:0;font-size:14.5px}
+
+/* Simulator */
+.io{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.io-group{display:flex;flex-direction:column;align-items:center;gap:8px}
+.io-group b{font:600 12px/1 var(--font-mono);color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase}
+.sw{
+  min-width:62px;min-height:44px;padding:0 10px;border-radius:var(--radius-md);
+  background:var(--track);color:var(--text-muted);font:700 18px/1 var(--font-mono);
+  border:2px solid var(--border);cursor:pointer;transition:all .25s var(--ease);position:relative;
+}
+.sw:hover{border-color:var(--accent)}
+.sw:active{transform:scale(.93)}
+.sw.on{
+  background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),0 0 22px color-mix(in srgb, var(--accent) 70%, transparent);
+  transform:translateY(-2px);
+}
+.out{
+  padding:12px 18px;border-radius:var(--radius-md);background:var(--surface-2);border:1.5px solid var(--border);
+  font:700 15px/1 var(--font-mono);color:var(--text-muted);transition:.3s var(--ease);
+}
+.out span{font-size:17px}
+.out.on{
+  color:var(--accent-ink);background:linear-gradient(135deg,var(--accent),var(--accent-strong));border-color:transparent;
+  box-shadow:0 0 22px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Diagram */
+.diagram{overflow:auto;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md)}
+svg{width:100%;min-width:1000px;height:auto;display:block}
+.gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.4;transition:stroke .3s}
+.wire{fill:none;stroke:var(--wire-off);stroke-width:4;stroke-linecap:round;transition:stroke .25s,filter .25s}
+.wire.on{
+  stroke:var(--accent);stroke-width:5;stroke-dasharray:10 7;animation:flow .6s linear infinite;
+  filter:drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 80%, transparent));
+}
+@keyframes flow{to{stroke-dashoffset:-17}}
+.pulse{fill:var(--accent);opacity:0;filter:drop-shadow(0 0 6px var(--accent));transition:opacity .2s}
+.wire.on + .pulse{opacity:1}
+.txt{font:700 13.5px var(--font-mono);fill:var(--ink)}
+.sig{font-size:12px;fill:var(--text-faint)}
+.dot{fill:var(--ink)}
+.note{margin-top:14px;padding:14px 16px;border-left:4px solid var(--brand-b);background:var(--surface-2);
+  border-radius:var(--radius-sm);color:var(--text-muted);font-size:14px;line-height:1.6}
+
+/* Table */
+table{border-collapse:collapse;width:100%;text-align:center;font-family:var(--font-mono);font-size:14px;margin-top:10px}
+th,td{border:1px solid var(--border);padding:9px 8px}
+th{background:var(--surface-2);font-weight:700;color:var(--text-muted);letter-spacing:.03em}
+tr{transition:background .3s var(--ease)}
+tr.hl{background:color-mix(in srgb, var(--accent) 18%, transparent);font-weight:700;box-shadow:inset 0 0 0 1px var(--accent)}
+
+.formula{
+  padding:13px 16px;margin:8px 0;background:var(--surface-2);border:1px solid var(--border-soft);
+  border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:1.02rem;color:var(--text);
+}
+
+footer{max-width:1180px;margin:20px auto 0;padding:20px 18px 40px;text-align:center;color:var(--text-faint);font-size:13px}
+
+@media(max-width:720px){
+  main{padding:10px 12px 50px}
+  .card{padding:16px;border-radius:16px}
+  .learn{grid-template-columns:1fr}
+  header{padding:26px 16px 22px}
+  .header-inner{flex-direction:column}
+  .tagline{font-size:13.5px}
+  svg{min-width:760px}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <svg class="circuit" viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 40H180Q200 40 200 60V120H400"/>
+    <path d="M0 220H150Q170 220 170 200V150H500Q520 150 520 170V260H800"/>
+    <path d="M600 0V70Q600 90 620 90H800"/>
+    <circle cx="200" cy="60" r="4"/><circle cx="400" cy="120" r="4"/><circle cx="520" cy="170" r="4"/><circle cx="620" cy="90" r="4"/>
+  </svg>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div>
+        <p class="eyebrow">Interactive Logic Circuit Lab</p>
+        <h1>Adder &amp; Subtractor Lab</h1>
+      </div>
+    </div>
+    <button id="themeToggle" class="theme-toggle" aria-pressed="false">
+      <span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+    </button>
+  </div>
+  <p class="tagline">Flip the switches, watch the signal glow travel down the wires, and see exactly how binary addition and subtraction are built from XOR, AND, OR and NOT gates — concept, truth table, Boolean expression and gate-level wiring, all live.</p>
+</header>
+<main>
+  <div class="tabs-wrap"><div class="tabs" id="tabs"></div></div>
+  <div id="app"></div>
+</main>
+<footer>Built with plain HTML, SVG &amp; JavaScript · Toggle the switches above to simulate every circuit live</footer>
+
+<script>
+const ICON={ha:'⊕',fa:'⊕⊕',fa2:'⊕⚙',hs:'⊖',fs:'⊖⊖',fs2:'⊖⚙'};
+const C=[
+{id:'ha',n:'Half Adder',i:['A','B'],o:['Sum','Carry'],f:v=>[v[0]^v[1],v[0]&v[1]],e:['Sum = A ⊕ B = A̅B + AB̅','Carry = AB']},
+{id:'fa',n:'Full Adder',i:['A','B','Cin'],o:['Sum','Cout'],f:v=>[v[0]^v[1]^v[2],(v[0]&v[1])|((v[0]^v[1])&v[2])],e:['S1 = A ⊕ B; C1 = AB','Sum = S1 ⊕ Cin; C2 = S1·Cin','Cout = C1 + C2']},
+{id:'fa2',n:'Full Adder using 2 Half Adders',i:['A','B','Cin'],o:['Sum','Cout'],f:v=>[v[0]^v[1]^v[2],(v[0]&v[1])|((v[0]^v[1])&v[2])],e:['HA1: S1=A⊕B, C1=AB','HA2: Sum=S1⊕Cin, C2=S1·Cin','Cout=C1+C2']},
+{id:'hs',n:'Half Subtractor',i:['A','B'],o:['Difference','Borrow'],f:v=>[v[0]^v[1],(!v[0]&&v[1])?1:0],e:['Difference = A ⊕ B','Borrow = A̅B']},
+{id:'fs',n:'Full Subtractor',i:['A','B','Bin'],o:['Difference','Bout'],f:v=>{let d=v[0]^v[1],b1=!v[0]&&v[1],b2=!d&&v[2];return[d^v[2],(b1|b2)?1:0]},e:['D1=A⊕B; B1=A̅B','Difference=D1⊕Bin; B2=D̅1·Bin','Bout=B1+B2']},
+{id:'fs2',n:'Full Subtractor using 2 Half Subtractors',i:['A','B','Bin'],o:['Difference','Bout'],f:v=>{let d=v[0]^v[1],b1=!v[0]&&v[1],b2=!d&&v[2];return[d^v[2],(b1|b2)?1:0]},e:['HS1: D1=A⊕B, B1=A̅B','HS2: Difference=D1⊕Bin, B2=D̅1·Bin','Bout=B1+B2']}
+];
+const X={
+ha:['A Half Adder adds two one-bit binary inputs A and B.','XOR generates Sum because it is HIGH when the inputs differ. AND generates Carry only when both inputs are HIGH.','Used as a basic building block in binary adders, arithmetic circuits, counters and processor arithmetic units.','It has no incoming carry input, so it is commonly used to explain the first stage of binary addition.','A and B fan out to both XOR and AND. XOR produces Sum; AND produces Carry.'],
+fa:['A Full Adder adds A, B and an incoming carry Cin.','XOR1 creates S1. XOR2 combines S1 and Cin for Sum. Two AND gates generate C1 and C2; OR combines them for Cout.','Used in multi-bit adders, ALUs, processors, calculators and address-generation hardware.','It accepts a carry from a previous bit position, allowing Full Adders to be cascaded.','A,B → XOR1 → S1; S1,Cin → XOR2 → Sum. A,B → AND1 → C1; S1,Cin → AND2 → C2; C1,C2 → OR → Cout.'],
+fa2:['A Full Adder can be constructed from two Half Adders and one OR gate.','HA1 adds A and B to create S1 and C1. HA2 adds S1 and Cin to create Sum and C2. OR generates Cout.','Demonstrates modular and reusable digital hardware design.','Complex circuits can be created by interconnecting smaller verified functional blocks.','A,B → HA1 → S1,C1; S1,Cin → HA2 → Sum,C2; C1,C2 → OR → Cout.'],
+hs:['A Half Subtractor subtracts one-bit B from A without an incoming borrow.','XOR generates Difference. A passes through NOT, then A̅ and B enter AND to generate Borrow.','Used as a basic element in binary subtraction and arithmetic circuits.','Borrow is required only when A=0 and B=1.','A,B → XOR → Difference. A → NOT → A̅; A̅,B → AND → Borrow.'],
+fs:['A Full Subtractor subtracts B and incoming borrow Bin from A.','XOR1 creates D1; XOR2 combines D1 and Bin. Borrow paths B1 and B2 are combined by OR.','Used in multi-bit subtractors, ALUs and processor arithmetic circuits.','Incoming borrow allows subtraction stages to be cascaded across a binary word.','A,B → XOR1 → D1; D1,Bin → XOR2 → Difference. A̅B gives B1; D̅1·Bin gives B2; OR produces Bout.'],
+fs2:['A Full Subtractor can be constructed using two Half Subtractors and one OR gate.','HS1 subtracts B from A. HS2 subtracts Bin from D1. Their borrow outputs are ORed.','Useful for learning hierarchical combinational circuit design.','The structure mirrors subtraction in two steps: subtract B first, then subtract incoming borrow.','A,B → HS1 → D1,B1; D1,Bin → HS2 → Difference,B2; B1,B2 → OR → Bout.']};
+const W=(id,d)=>`<path id="${id}" class="wire" d="${d}"/><circle r="4.2" class="pulse"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`,D=(x,y)=>`<circle cx="${x}" cy="${y}" r="5" class="dot"/>`;
+function AND(x,y,l='AND'){return `<g transform="translate(${x},${y})"><path class="gate" d="M0 0H38A38 38 0 0 1 38 76H0Z"/><text x="35" y="43" text-anchor="middle" class="txt">${l}</text></g>`}
+function OR(x,y,l='OR'){return `<g transform="translate(${x},${y})"><path class="gate" d="M0 0Q28 38 0 76Q48 72 86 38Q48 4 0 0Z"/><text x="43" y="43" text-anchor="middle" class="txt">${l}</text></g>`}
+function XOR(x,y,l='XOR'){return `<g transform="translate(${x},${y})"><path class="gate" d="M8 0Q36 38 8 76Q56 72 94 38Q56 4 8 0Z"/><path class="gate" fill="none" d="M0 0Q28 38 0 76"/><text x="50" y="43" text-anchor="middle" class="txt">${l}</text></g>`}
+function NOT(x,y){return `<g transform="translate(${x},${y})"><path class="gate" d="M0 0L62 34L0 68Z"/><circle class="gate" cx="70" cy="34" r="8"/><text x="25" y="39" class="txt">NOT</text></g>`}
+function diag(c){if(c.id==='ha'||c.id==='hs'){let s=c.id==='hs';return `<svg viewBox="0 0 1050 430"><text x="20" y="25" class="txt">${c.n} — Standard Logic Gate Diagram</text><text x="20" y="90" class="txt">A</text><text x="20" y="170" class="txt">B</text>${W(c.id+'i0','M45 85H150')}${W(c.id+'i1','M45 165H125')}${D(150,85)}${D(125,165)}${W(c.id+'xa','M150 85H310V100H360')}${W(c.id+'xb','M125 165H290V135H360')}${XOR(360,82)}${W(c.id+'o0','M454 120H850')}<text x="870" y="125" class="txt">${c.o[0]}</text>${s?`${W('hsni','M150 85V270H260')}${NOT(260,236)}${W('hsno','M338 270H470V285H520')}${W('hsbb','M125 165V330H520')}${AND(520,273)}${W('hso1','M596 311H850')}`:`${W('haaa','M150 85V285H520')}${W('haab','M125 165V330H520')}${AND(520,273)}${W('hao1','M596 311H850')}`}<text x="870" y="316" class="txt">${c.o[1]}</text></svg>`}
+if(c.id==='fa'||c.id==='fs'){let s=c.id==='fs';return `<svg viewBox="0 0 1150 530"><text x="20" y="25" class="txt">${c.n} — Exact Standard Gate Connections</text><text x="20" y="75" class="txt">A</text><text x="20" y="135" class="txt">B</text><text x="20" y="200" class="txt">${s?'Bin':'Cin'}</text>${W(c.id+'i0','M45 70H120')}${W(c.id+'i1','M45 130H100')}${W(c.id+'i2','M45 195H80')}${D(120,70)}${D(100,130)}${D(80,195)}${W(c.id+'x1a','M120 70H230V80H280')}${W(c.id+'x1b','M100 130H210V115H280')}${XOR(280,62,'XOR1')}${W(c.id+'mid','M374 100H500')}${D(440,100)}${W(c.id+'x2a','M500 100H570V105H620')}${W(c.id+'x2b','M80 195H550V140H620')}${XOR(620,87,'XOR2')}${W(c.id+'o0','M714 125H980')}<text x="995" y="130" class="txt">${c.o[0]}</text>${s?`${W('fsni','M120 70V290H210')}${NOT(210,256)}${W('fsno','M288 290H410V300H470')}${W('fsbb','M100 130V340H470')}${AND(470,288,'AND1')}${W('fsq1','M546 326H840V350H890')}${W('fsdi','M440 100V405H550')}${NOT(550,371)}${W('fsdo','M628 405H710V415H760')}${W('fsbi','M80 195V455H760')}${AND(760,403,'AND2')}${W('fsq2','M836 441H860V390H890')}`:`${W('faa','M120 70V310H320')}${W('fab','M100 130V350H320')}${AND(320,298,'AND1')}${W('faq1','M396 336H840V350H890')}${W('fas','M440 100V410H600')}${W('fac','M80 195V450H600')}${AND(600,398,'AND2')}${W('faq2','M676 436H840V390H890')}`}${OR(890,330)}${W(c.id+'o1','M976 368H980')}<text x="995" y="373" class="txt">${c.o[1]}</text></svg>`}
+let a=c.id==='fa2',b=a?'HALF ADDER':'HALF SUBTRACTOR';return `<svg viewBox="0 0 1100 450"><text x="20" y="25" class="txt">${c.n}</text><text x="20" y="85" class="txt">A</text><text x="20" y="145" class="txt">B</text><text x="20" y="240" class="txt">${a?'Cin':'Bin'}</text>${W(c.id+'i0','M45 80H150')}${W(c.id+'i1','M45 140H150')}<rect x="150" y="50" width="190" height="120" rx="15" class="gate"/><text x="245" y="110" text-anchor="middle" class="txt">${b} 1</text>${W(c.id+'mid','M340 80H480')}${W(c.id+'i2','M45 235H440V145H480')}<rect x="480" y="50" width="200" height="160" rx="15" class="gate"/><text x="580" y="125" text-anchor="middle" class="txt">${b} 2</text>${W(c.id+'o0','M680 80H950')}${W(c.id+'q1','M340 145H740V300H800')}${W(c.id+'q2','M680 180H760V340H800')}${OR(800,290)}${W(c.id+'o1','M886 328H950')}<text x="965" y="85" class="txt">${c.o[0]}</text><text x="965" y="333" class="txt">${c.o[1]}</text></svg>`}
+function rows(c){let z='';for(let n=0;n<1<<c.i.length;n++){let v=c.i.map((_,j)=>(n>>(c.i.length-1-j))&1),o=c.f(v);z+=`<tr id="${c.id}r${n}">${[...v,...o].map(x=>`<td>${x}</td>`).join('')}</tr>`}return z}
+function panel(c,n){let x=X[c.id];return `<section id="${c.id}" class="panel ${n?'':'active'}"><div class="card"><h2 class="title">${c.n}</h2><div class="learn"><div class="box"><h4>💡 What is it?</h4><p>${x[0]}</p></div><div class="box"><h4>⚙️ How does it work?</h4><p>${x[1]}</p></div><div class="box"><h4>🌍 Real-Time Application</h4><p>${x[2]}</p></div><div class="box"><h4>🧠 Learning Point</h4><p>${x[3]}</p></div></div><h3 class="title" style="font-size:16px;margin-top:22px">🎛 Live Simulator</h3><div class="io">${c.i.map((q,k)=>`<div class="io-group"><b>${q}</b><button id="${c.id}b${k}" class="sw" onclick="flip('${c.id}',${k})">0</button></div>`).join('')}${c.o.map((q,k)=>`<div class="out" id="${c.id}out${k}">${q}: <span id="${c.id}v${k}">0</span></div>`).join('')}</div></div><div class="card"><h3 class="title" style="font-size:18px">🔌 Animated Logic Diagram</h3><div class="diagram">${diag(c)}</div><div class="note"><b>Signal Flow:</b> ${x[4]} Glowing wires with a traveling pulse represent logic HIGH (1).</div></div><div class="card"><h3 class="title" style="font-size:18px">📋 Truth Table</h3><p style="color:var(--text-muted);font-size:14px;margin-top:6px">The active input combination is highlighted automatically.</p><table><tr>${[...c.i,...c.o].map(q=>`<th>${q}</th>`).join('')}</tr>${rows(c)}</table></div><div class="card"><h3 class="title" style="font-size:18px">🧠 Boolean Expression &amp; Simplification</h3>${c.e.map(q=>`<div class="formula">${q}</div>`).join('')}<div class="note">XOR is HIGH when inputs differ. AND is HIGH when all required inputs are HIGH. OR combines Carry/Borrow conditions. NOT complements a signal.</div></div></section>`}
+tabs.innerHTML=C.map((c,n)=>`<button class="${n?'':'active'}" onclick="show('${c.id}',this)"><span class="glyph">${ICON[c.id]}</span>${c.n}</button>`).join('');app.innerHTML=C.map(panel).join('');
+function show(id,b){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
+function g(id){return C.find(x=>x.id===id)}
+function vals(id){return g(id).i.map((_,n)=>document.getElementById(id+'b'+n).classList.contains('on')?1:0)}
+function w(id,x){let e=document.getElementById(id);if(e)e.classList.toggle('on',!!x)}
+function flip(id,n){let b=document.getElementById(id+'b'+n);b.classList.toggle('on');b.textContent=b.classList.contains('on')?'1':'0';upd(id)}
+function upd(id){let c=g(id),v=vals(id),o=c.f(v);o.forEach((x,n)=>{document.getElementById(id+'v'+n).textContent=x;w(id+'o'+n,x);let od=document.getElementById(id+'out'+n);if(od)od.classList.toggle('on',!!x)});v.forEach((x,n)=>w(id+'i'+n,x));w(id+'xa',v[0]);w(id+'xb',v[1]);if(id==='ha'){w('haaa',v[0]);w('haab',v[1]);w('hao1',o[1])}if(id==='hs'){w('hsni',v[0]);w('hsno',!v[0]);w('hsbb',v[1]);w('hso1',o[1])}if(v.length>2){let m=v[0]^v[1];w(id+'x1a',v[0]);w(id+'x1b',v[1]);w(id+'mid',m);w(id+'x2a',m);w(id+'x2b',v[2]);if(id==='fa'){w('faa',v[0]);w('fab',v[1]);w('faq1',v[0]&v[1]);w('fas',m);w('fac',v[2]);w('faq2',m&v[2])}if(id==='fs'){w('fsni',v[0]);w('fsno',!v[0]);w('fsbb',v[1]);w('fsq1',!v[0]&&v[1]);w('fsdi',m);w('fsdo',!m);w('fsbi',v[2]);w('fsq2',!m&&v[2])}if(id==='fa2'||id==='fs2'){let q1=id==='fa2'?v[0]&v[1]:!v[0]&&v[1],q2=id==='fa2'?m&v[2]:!m&&v[2];w(id+'q1',q1);w(id+'q2',q2)}}document.querySelectorAll(`#${id} tr`).forEach(x=>x.classList.remove('hl'));let n=v.reduce((a,b)=>(a<<1)|b,0),r=document.getElementById(id+'r'+n);if(r)r.classList.add('hl')}
+C.forEach(c=>upd(c.id));
+
+/* Theme toggle */
+const bodyEl=document.body,themeToggle=document.getElementById('themeToggle'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){bodyEl.setAttribute('data-theme',t);themeToggle.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)});
+</script>
+</body>
+</html>

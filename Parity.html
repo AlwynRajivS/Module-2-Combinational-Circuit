@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parity Generator & Checker Interactive Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --amber:#f59e0b;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  --ok:#4ade80; --ok-bg:#12331f; --ok-border:#1e5636;
+  --bad:#fb7185; --bad-bg:#3a1420; --bad-border:#5c1f2f;
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --amber:#d97706;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  --ok:#178a4c; --ok-bg:#e4f8ea; --ok-border:#bfe9cd;
+  --bad:#c81e3e; --bad-bg:#fdeaee; --bad-border:#f6c6d1;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:linear-gradient(var(--bg-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;background-position:center top;min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease)}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+header{position:relative;overflow:hidden;padding:38px 18px 30px;color:#fff;background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));background-size:220% 220%;animation:bgshift 12s ease infinite}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+.wrap,main{max-width:1180px;margin:auto}
+.header-top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:50px;height:50px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff40;display:flex;align-items:center;justify-content:center;font-size:23px;backdrop-filter:blur(6px);box-shadow:0 0 24px #ffffff30;flex:none}
+.eyebrow{margin:0 0 3px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.88}
+h1{margin:0;font:700 clamp(24px,4vw,36px)/1.15 var(--font-display);letter-spacing:-.01em}
+header p{position:relative;line-height:1.7;opacity:.92;font-size:15px;max-width:850px;margin:16px 0 0}
+.theme-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);backdrop-filter:blur(6px);transition:.25s var(--ease)}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+.stat-row{position:relative;margin:20px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+.stat{padding:8px 13px;border-radius:999px;background:#ffffff1c;border:1px solid #ffffff35;font:600 12px/1 var(--font-mono);backdrop-filter:blur(6px)}
+
+.tabs{position:sticky;top:0;z-index:20;display:flex;gap:9px;overflow:auto;padding:12px;background:linear-gradient(var(--bg),var(--bg) 75%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+.tabs button,.btn{padding:11px 16px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font:600 13.5px/1 var(--font-display);cursor:pointer;white-space:nowrap;transition:.25s var(--ease);box-shadow:var(--shadow-sm)}
+.tabs button:hover,.btn:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.tabs button.on,.btn.on{background:linear-gradient(120deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;transform:translateY(-2px);box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+main{padding:12px}
+.page{display:none}.page.on{display:block;animation:fade .45s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin:15px 0;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);animation:cardIn .5s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.title{border-left:5px solid var(--accent);padding-left:11px;margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:stretch}
+.box,.note{background:var(--surface-2);border:1px solid var(--border-soft);padding:14px;border-radius:14px;line-height:1.65;color:var(--text-muted);font-size:14.5px}
+.box{display:flex;flex-direction:column;height:100%;transition:.25s var(--ease)}
+.box:hover{border-color:var(--accent);background:var(--surface-hover)}
+.box b,.note b{color:var(--text)}
+.note{border-left:5px solid var(--brand-b)}
+.formula,.result{padding:13px;margin:9px 0;border-radius:12px;font-family:var(--font-mono)}
+.formula{background:var(--surface-2);border:1px solid var(--border-soft);color:var(--text)}
+.result{background:linear-gradient(120deg,var(--brand-a),var(--brand-b));line-height:1.8;color:#fff;box-shadow:var(--shadow-sm)}
+.controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.diagram{overflow:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:15px;padding:10px}
+.diagram svg{min-width:700px;width:100%;height:auto;display:block}
+.gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.6}
+.wire{fill:none;stroke:var(--wire-off);stroke-width:5;stroke-linecap:round;transition:.25s var(--ease)}
+.wire.hi{stroke:var(--accent);filter:drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 80%, transparent))}
+.led{fill:var(--track);stroke:var(--ink);stroke-width:2;transition:.25s var(--ease)}
+.led.hi{fill:var(--ok);filter:drop-shadow(0 0 9px var(--ok))}
+.txt{fill:var(--ink);font:700 15px var(--font-mono)}
+table{width:100%;border-collapse:collapse;text-align:center;font-family:var(--font-mono);font-size:13.5px}
+th,td{border:1px solid var(--border);padding:7px;transition:background .3s var(--ease)}
+th{background:var(--surface-2);color:var(--text-muted)}
+.hl td{background:color-mix(in srgb, var(--accent) 18%, transparent);font-weight:700;box-shadow:inset 0 0 0 1px var(--accent)}
+.tablewrap{overflow:auto}
+.kmaps{display:flex;gap:18px;flex-wrap:wrap}
+.kmap{display:grid;grid-template-columns:55px repeat(4,50px);width:max-content;font-family:var(--font-mono)}
+.kmap div{border:1px solid var(--border);padding:9px;text-align:center;color:var(--text-muted);font-size:12.5px}
+.kmaps>div>h3{margin:0 0 8px;font:700 14px var(--font-display);color:var(--text)}
+.one{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);font-weight:900;box-shadow:inset 0 0 0 1px var(--accent)}
+.lamp{display:inline-block;padding:8px 11px;background:#00000030;border-radius:9px;font-weight:700}
+.lamp.on{background:linear-gradient(135deg,var(--ok),#22c55e);color:#05210e;box-shadow:0 0 14px color-mix(in srgb, var(--ok) 55%, transparent)}
+.err.on{background:linear-gradient(135deg,var(--bad),#f43f5e);color:#2a0510;border-color:transparent}
+@media(max-width:700px){
+  .grid{grid-template-columns:1fr}
+  .card{padding:13px;border-radius:16px}
+  .diagram svg{min-width:650px}
+  th,td{font-size:11px}
+  header{padding:26px 16px 22px}
+  .header-top{flex-direction:column}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="wrap">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-mark">🛡️</div>
+        <div><p class="eyebrow" style="margin:0">Digital Electronics · Module 2</p><h1>Parity Generator & Checker</h1></div>
+      </div>
+      <button id="themeToggle" class="theme-toggle" aria-pressed="false"><span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span></button>
+    </div>
+    <p>Interactive learning of even and odd parity with explanation, block concept, truth tables, K-maps, simplified expressions, exact XOR logic gates, animated signal flow, sender-to-receiver simulation and error injection.</p>
+    <div class="stat-row">
+      <span class="stat">📚 5 Sections</span>
+      <span class="stat">🧪 Live Verifiers</span>
+      <span class="stat">📡 Transmission Lab</span>
+      <span class="stat">🎓 Gate-level detail</span>
+    </div>
+  </div>
+</header>
+<div class="tabs"><button class="on" data-p="intro">Introduction</button><button data-p="gen">Generator</button><button data-p="check">Checker</button><button data-p="lab">Transmission Lab</button><button data-p="apps">Applications</button></div><main>
+<section id="intro" class="page on"><div class="card"><h2 class="title">Introduction to Parity</h2><p>Parity is a simple error-detection method. A <b>parity generator</b> at the sender adds one extra parity bit. A <b>parity checker</b> at the receiver tests whether the received word still satisfies the selected parity rule.</p><div class="grid"><div class="box"><b>Even Parity</b><br>Total number of 1s, including P, must be even.</div><div class="box"><b>Odd Parity</b><br>Total number of 1s, including P, must be odd.</div><div class="box"><b>Generator</b><br>Creates the required parity bit before transmission.</div><div class="box"><b>Checker</b><br>Detects a parity mismatch after reception.</div></div><div class="note"><b>Limitation:</b> Simple parity detects every odd number of bit flips, including a single-bit error, but can miss an even number of bit flips. It detects errors; it does not correct them.</div></div></section>
+<section id="gen" class="page"><div class="card"><h2 class="title">3-Bit Parity Generator</h2><div class="formula">Even parity bit Pₑ = A ⊕ B ⊕ C = Σm(1,2,4,7)</div><div class="formula">Odd parity bit Pₒ = (A ⊕ B ⊕ C)̅ = Σm(0,3,5,6)</div><div class="note">The K-map contains an alternating checkerboard pattern, so adjacent 1s cannot be grouped conventionally. Recognizing the XOR pattern gives the compact expression.</div></div><div class="card"><h2 class="title">Truth Table</h2><div class="tablewrap"><table id="gt"></table></div></div><div class="card"><h2 class="title">K-Maps</h2><div id="gm" class="kmaps"></div></div>
+<div class="card"><h2 class="title">Interactive XOR Logic Diagram</h2><div class="controls"><button id="gA" class="btn">A=0</button><button id="gB" class="btn">B=0</button><button id="gC" class="btn">C=0</button></div><div class="diagram"><svg viewBox="0 0 1050 450"><text x="20" y="80" class="txt">A</text><text x="20" y="170" class="txt">B</text><text x="20" y="330" class="txt">C</text><path id="wa" d="M50 75H200" class="wire"/><path id="wb" d="M50 165H200" class="wire"/><path d="M230 45Q285 105 230 205Q345 190 430 125Q345 60 230 45Z" class="gate"/><path d="M205 45Q260 125 205 205" class="gate" fill="none"/><text x="295" y="130" class="txt">XOR</text><path id="wx1" d="M430 125H570" class="wire"/><path id="wc" d="M50 325H530V245H570" class="wire"/><path d="M600 90Q655 160 600 285Q715 265 800 190Q715 115 600 90Z" class="gate"/><path d="M575 90Q630 190 575 285" class="gate" fill="none"/><text x="665" y="195" class="txt">XOR</text><path id="wpe" d="M800 190H940" class="wire"/><circle id="le" cx="970" cy="190" r="20" class="led"/><text x="995" y="195" class="txt">Pₑ</text><path id="winv" d="M875 190V340H900" class="wire"/><path d="M900 310L900 370L955 340Z" class="gate"/><circle cx="967" cy="340" r="10" class="gate"/><path id="wpo" d="M977 340H995" class="wire"/><circle id="lo" cx="1020" cy="340" r="18" class="led"/></svg></div><div id="gr" class="result"></div></div></section>
+<section id="check" class="page"><div class="card"><h2 class="title">4-Bit Parity Checker</h2><div class="formula">Even-parity error flag EEC = A ⊕ B ⊕ C ⊕ D</div><div class="formula">Odd-parity error flag OEC = (A ⊕ B ⊕ C ⊕ D)̅</div><p>For even parity, EEC=0 means valid and EEC=1 indicates a detected error. For odd parity, OEC=0 means valid and OEC=1 indicates a detected error.</p></div><div class="card"><h2 class="title">Complete Truth Table</h2><div class="tablewrap"><table id="ct"></table></div></div><div class="card"><h2 class="title">K-Maps & Expressions</h2><div id="cm" class="kmaps"></div><div class="formula">EEC = Σm(1,2,4,7,8,11,13,14) = A⊕B⊕C⊕D</div><div class="formula">OEC = Σm(0,3,5,6,9,10,12,15) = (A⊕B⊕C⊕D)̅</div></div><div class="card"><h2 class="title">⚡ Interactive Parity Checker Circuit — Live Gate-Level Demonstration</h2>
+<p>Toggle the received bits A, B, C and D. The active HIGH paths glow through three cascaded XOR gates. The final XOR output is the <b>Even Error Check (EEC)</b>; its complement through the NOT gate is the <b>Odd Error Check (OEC)</b>.</p>
+<div class="controls"><button id="cA" class="btn">A=0</button><button id="cB" class="btn">B=0</button><button id="cC" class="btn">C=0</button><button id="cD" class="btn">D=0</button></div>
+<div class="diagram"><svg viewBox="0 0 1550 650">
+<!-- Input labels and rails -->
+<text x="25" y="90" class="txt">A</text>
+<text x="25" y="190" class="txt">B</text>
+<text x="25" y="350" class="txt">C</text>
+<text x="25" y="510" class="txt">D (Parity Bit)</text>
+
+<!-- A and B directly into XOR1 input pins -->
+<path id="cwa" d="M55 85H235" class="wire"/>
+<path id="cwb" d="M55 185H235" class="wire"/>
+
+<!-- XOR1: two left input pins at y85/y185, output y135 -->
+<path d="M265 55 Q325 105 265 215 Q390 200 480 135 Q390 70 265 55 Z" class="gate"/>
+<path d="M240 55 Q300 135 240 215" class="gate" fill="none"/>
+<!-- short pin connections -->
+<path id="cwaPin" d="M235 85H282" class="wire"/>
+<path id="cwbPin" d="M235 185H282" class="wire"/>
+<text x="335" y="140" class="txt">XOR 1</text>
+
+<!-- XOR1 output to XOR2 top input -->
+<path id="cwx1" d="M480 135H610V245H650" class="wire"/>
+<text x="495" y="118" class="txt">X₁=A⊕B</text>
+
+<!-- C directly to XOR2 bottom input -->
+<path id="cwc" d="M55 345H650" class="wire"/>
+
+<!-- XOR2 -->
+<path d="M680 215 Q740 265 680 375 Q805 360 895 295 Q805 230 680 215 Z" class="gate"/>
+<path d="M655 215 Q715 295 655 375" class="gate" fill="none"/>
+<path id="cwx1Pin" d="M650 245H697" class="wire"/>
+<path id="cwcPin" d="M650 345H697" class="wire"/>
+<text x="750" y="300" class="txt">XOR 2</text>
+
+<!-- XOR2 output to XOR3 top input -->
+<path id="cwx2" d="M895 295H985V405H1020" class="wire"/>
+<text x="900" y="275" class="txt">X₂=A⊕B⊕C</text>
+
+<!-- D directly to XOR3 bottom input -->
+<path id="cwd" d="M55 505H1020" class="wire"/>
+
+<!-- XOR3 -->
+<path d="M1050 375 Q1110 425 1050 535 Q1175 520 1260 455 Q1175 390 1050 375 Z" class="gate"/>
+<path d="M1025 375 Q1085 455 1025 535" class="gate" fill="none"/>
+<path id="cwx2Pin" d="M1020 405H1067" class="wire"/>
+<path id="cwdPin" d="M1020 505H1067" class="wire"/>
+<text x="1120" y="460" class="txt">XOR 3</text>
+
+<!-- XOR3 OUTPUT NODE -->
+<!-- XOR3 output first leaves the gate. The node then splits into two independent branches. -->
+<path id="cweec" d="M1260 455H1320" class="wire"/>
+<circle cx="1290" cy="455" r="7" fill="#eef6ff"/>
+
+<!-- Branch 1: direct XOR3 output = EEC -->
+<path id="cweecLedWire" d="M1320 455H1370" class="wire"/>
+<circle id="cledEEC" cx="1400" cy="455" r="20" class="led"/>
+<text x="1435" y="461" class="txt">EEC</text>
+
+<!-- Branch 2: XOR3 output is routed DOWN and then into the LEFT INPUT of the NOT gate -->
+<path id="cwinv" d="M1290 455V565H1330" class="wire"/>
+
+<!-- NOT gate: INPUT is at x=1330 (LEFT); OUTPUT bubble is at x=1402 (RIGHT) -->
+<path d="M1330 530L1330 600L1390 565Z" class="gate"/>
+<circle cx="1402" cy="565" r="11" class="gate"/>
+<text x="1342" y="570" class="txt">NOT</text>
+
+<!-- NOT gate OUTPUT -> OEC -->
+<path id="cwoec" d="M1413 565H1460" class="wire"/>
+<circle id="cledOEC" cx="1490" cy="565" r="20" class="led"/>
+<text x="1518" y="571" class="txt">OEC</text>
+
+<!-- connection annotations -->
+<text x="70" y="570" class="txt">Signal flow: (A ⊕ B) → XOR with C → XOR with D → EEC</text>
+<text x="70" y="595" class="txt">OEC = NOT(EEC)</text>
+</svg></div>
+<div id="checkerSteps" class="note"></div><div id="cr" class="result"></div></div></section>
+<section id="lab" class="page"><div class="card"><h2 class="title">🚀 Sender → Channel → Receiver Interactive Lab</h2><p>Set the data, choose even or odd parity, then deliberately flip transmitted bits to see what the receiver detects.</p><div class="controls"><button id="lA" class="btn">A=0</button><button id="lB" class="btn">B=0</button><button id="lC" class="btn">C=0</button><button id="mode" class="btn on">EVEN PARITY</button></div><div id="tx" class="result"></div><h3>Inject Channel Errors</h3><div class="controls"><button class="btn err" data-i="0">Flip A</button><button class="btn err" data-i="1">Flip B</button><button class="btn err" data-i="2">Flip C</button><button class="btn err" data-i="3">Flip P</button><button id="reset" class="btn">Clear Errors</button></div><div id="rx" class="result"></div><div class="note"><b>Try this:</b> Flip one bit and the error is detected. Flip two bits and parity may become valid again. This demonstrates the key limitation of simple parity.</div></div></section>
+<section id="apps" class="page"><div class="card"><h2 class="title">Applications</h2><div class="grid"><div class="box"><b>Serial Communication</b><br>UART-style frames may use a parity bit for basic error detection.</div><div class="box"><b>Memory Systems</b><br>Parity can detect corruption in stored or transferred data words.</div><div class="box"><b>Computer Buses</b><br>Provides a lightweight integrity check for digital transfers.</div><div class="box"><b>Communication Links</b><br>Detects many transmission errors caused by noise.</div><div class="box"><b>Embedded Systems</b><br>Useful where simple, low-gate-count error detection is required.</div><div class="box"><b>XOR Logic Learning</b><br>Parity demonstrates that XOR is 1 when an odd number of inputs are 1.</div></div></div></section>
+</main><script>
+const $=x=>document.getElementById(x),hi=(x,v)=>$(x)&&$(x).classList.toggle('hi',!!v);document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.p).classList.add('on')});
+let h='<tr><th>Dec</th><th>A</th><th>B</th><th>C</th><th>Pₑ</th><th>Pₒ</th></tr>';for(let n=0;n<8;n++){let s=n.toString(2).padStart(3,'0'),x=[...s].reduce((a,b)=>a^+b,0);h+=`<tr id="g${n}"><td>${n}</td>${[...s].map(v=>`<td>${v}</td>`).join('')}<td>${x}</td><td>${1-x}</td></tr>`}$('gt').innerHTML=h;h='<tr><th>Dec</th><th>A</th><th>B</th><th>C</th><th>D</th><th>EEC</th><th>OEC</th></tr>';for(let n=0;n<16;n++){let s=n.toString(2).padStart(4,'0'),x=[...s].reduce((a,b)=>a^+b,0);h+=`<tr id="c${n}"><td>${n}</td>${[...s].map(v=>`<td>${v}</td>`).join('')}<td>${x}</td><td>${1-x}</td></tr>`}$('ct').innerHTML=h;
+const gray=['00','01','11','10'];function m3(t,f){let h=`<div><h3>${t}</h3><div class="kmap"><div>A\BC</div>${gray.map(x=>`<div>${x}</div>`).join('')}`;[0,1].forEach(a=>{h+=`<div>${a}</div>`;gray.forEach(b=>{let v=f(a,+b[0],+b[1]);h+=`<div class="${v?'one':''}">${v}</div>`})});return h+'</div></div>'}$('gm').innerHTML=m3('Even Pₑ',(a,b,c)=>a^b^c)+m3('Odd Pₒ',(a,b,c)=>1-(a^b^c));function m4(t,f){let h=`<div><h3>${t}</h3><div class="kmap"><div>AB\CD</div>${gray.map(x=>`<div>${x}</div>`).join('')}`;gray.forEach(a=>{h+=`<div>${a}</div>`;gray.forEach(b=>{let v=f(+a[0],+a[1],+b[0],+b[1]);h+=`<div class="${v?'one':''}">${v}</div>`})});return h+'</div></div>'}$('cm').innerHTML=m4('EEC',(a,b,c,d)=>a^b^c^d)+m4('OEC',(a,b,c,d)=>1-(a^b^c^d));
+let G={A:0,B:0,C:0};['A','B','C'].forEach(n=>$('g'+n).onclick=function(){G[n]^=1;this.classList.toggle('on');this.textContent=n+'='+G[n];rg()});function rg(){let x=G.A^G.B,e=x^G.C,o=1-e;hi('wa',G.A);hi('wb',G.B);hi('wc',G.C);hi('wx1',x);hi('wpe',e);hi('winv',e);hi('wpo',o);hi('le',e);hi('lo',o);$('gr').innerHTML=`A B C = ${G.A}${G.B}${G.C}<br>A⊕B=${x} → Even parity Pₑ=<b>${e}</b> &nbsp; Odd parity Pₒ=<b>${o}</b>`;document.querySelectorAll('#gt tr').forEach(r=>r.classList.remove('hl'));let gr=$('g'+(G.A*4+G.B*2+G.C));if(gr){gr.classList.add('hl');gr.scrollIntoView({behavior:'smooth',block:'nearest'})}}let C={A:0,B:0,C:0,D:0};['A','B','C','D'].forEach(n=>$('c'+n).onclick=function(){C[n]^=1;this.classList.toggle('on');this.textContent=n+'='+C[n];rc()});function rc(){let x1=C.A^C.B,x2=x1^C.C,e=x2^C.D,o=1-e;
+hi('cwa',C.A);hi('cwaPin',C.A);hi('cwb',C.B);hi('cwbPin',C.B);hi('cwc',C.C);hi('cwcPin',C.C);hi('cwd',C.D);hi('cwdPin',C.D);hi('cwx1',x1);hi('cwx1Pin',x1);hi('cwx2',x2);hi('cwx2Pin',x2);hi('cweec',e);hi('cweecLedWire',e);hi('cwinv',e);hi('cwoec',o);hi('cledEEC',e);hi('cledOEC',o);
+$('checkerSteps').innerHTML=`<b>Live calculation:</b> X₁=A⊕B=${C.A}⊕${C.B}=<b>${x1}</b> → X₂=X₁⊕C=${x1}⊕${C.C}=<b>${x2}</b> → EEC=X₂⊕D=${x2}⊕${C.D}=<b>${e}</b> → OEC=EEC̅=<b>${o}</b>`;
+$('cr').innerHTML=`Received word = <b>${C.A}${C.B}${C.C}${C.D}</b><br><span class="lamp ${!e?'on':''}">Even parity: ${e?'⚠ ERROR DETECTED':'✓ VALID'}</span> &nbsp; <span class="lamp ${!o?'on':''}">Odd parity: ${o?'⚠ ERROR DETECTED':'✓ VALID'}</span><br>EEC=${e} &nbsp; | &nbsp; OEC=${o}`;
+document.querySelectorAll('#ct tr').forEach(r=>r.classList.remove('hl'));let cr=$('c'+(C.A*8+C.B*4+C.C*2+C.D));if(cr){cr.classList.add('hl');cr.scrollIntoView({behavior:'smooth',block:'nearest'})}}
+let L={A:0,B:0,C:0,odd:false},F=[0,0,0,0];['A','B','C'].forEach(n=>$('l'+n).onclick=function(){L[n]^=1;this.classList.toggle('on');this.textContent=n+'='+L[n];rl()});$('mode').onclick=function(){L.odd=!L.odd;this.textContent=L.odd?'ODD PARITY':'EVEN PARITY';rl()};document.querySelectorAll('.err').forEach(b=>b.onclick=()=>{F[+b.dataset.i]^=1;b.classList.toggle('on');rl()});$('reset').onclick=()=>{F=[0,0,0,0];document.querySelectorAll('.err').forEach(b=>b.classList.remove('on'));rl()};function rl(){let d=[L.A,L.B,L.C],x=d.reduce((a,b)=>a^b,0),p=L.odd?1-x:x,t=[...d,p],r=t.map((v,i)=>v^F[i]),z=r.reduce((a,b)=>a^b,0),ok=L.odd?z===1:z===0;$('tx').innerHTML=`Data=${d.join('')} | ${L.odd?'Odd':'Even'} parity P=${p}<br><b>Transmitted=${t.join('')}</b>`;$('rx').innerHTML=`Received=<b>${r.join('')}</b> | XOR=${z}<br><span class="lamp ${ok?'on':''}">${ok?'✓ PARITY VALID / NO ERROR DETECTED':'⚠ PARITY ERROR DETECTED'}</span>`}rg();rc();rl();
+
+/* Theme toggle */
+const bodyEl=document.body,themeToggle=document.getElementById('themeToggle'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){bodyEl.setAttribute('data-theme',t);themeToggle.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)});
+</script></body></html>

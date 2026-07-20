@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnitude Comparator Interactive Learning Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --font-display:'Space Grotesk',Inter,sans-serif;
+  --font-body:'Inter',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#090d15; --bg-grid-line:#141d2f;
+  --surface:#111827; --surface-2:#161f33; --surface-hover:#1b2540;
+  --border:#233149; --border-soft:#1a2438;
+  --text:#e9edf7; --text-muted:#8996b3; --text-faint:#5a6683;
+  --ink:#dfe6f5; --gate-fill:#161f33;
+  --wire-off:#374560;
+  --accent:#ffb347; --accent-strong:#ffd08a; --accent-ink:#1a1206;
+  --amber:#f59e0b;
+  --brand-a:#7c6cf0; --brand-b:#34d3c9; --brand-c:#ff8fb1;
+  --track:#1a2438;
+  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
+  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
+  --console-bg:#0c1220;
+  color-scheme: dark;
+}
+[data-theme="light"]{
+  --bg:#eef3fa; --bg-grid-line:#dbe5f2;
+  --surface:#ffffff; --surface-2:#f4f8fd; --surface-hover:#e9f0fa;
+  --border:#d9e2f0; --border-soft:#e6ecf6;
+  --text:#152036; --text-muted:#5c6a87; --text-faint:#8695b3;
+  --ink:#16233d; --gate-fill:#ffffff;
+  --wire-off:#aab8ce;
+  --accent:#e8890c; --accent-strong:#ffb347; --accent-ink:#241500;
+  --amber:#d97706;
+  --brand-a:#4338ca; --brand-b:#0891b2; --brand-c:#c0388a;
+  --track:#e7edf7;
+  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
+  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
+  --console-bg:#0e1526;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font-body);color:var(--text);background:var(--bg);
+  background-image:linear-gradient(var(--bg-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--bg-grid-line) 1px,transparent 1px);
+  background-size:42px 42px;background-position:center top;
+  min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease);
+}
+::selection{background:var(--accent);color:var(--accent-ink)}
+header{
+  position:relative;overflow:hidden;padding:38px 18px 30px;color:#fff;
+  background:linear-gradient(125deg,var(--brand-a),var(--brand-c) 55%,var(--brand-b));
+  background-size:220% 220%;animation:bgshift 12s ease infinite;
+}
+@keyframes bgshift{0%,100%{background-position:0% 40%}50%{background-position:100% 60%}}
+header .orb{position:absolute;border-radius:50%;background:#ffffff26;filter:blur(2px);pointer-events:none}
+header .orb.o1{width:280px;height:280px;right:-90px;top:-140px;animation:float1 9s ease-in-out infinite}
+header .orb.o2{width:160px;height:160px;left:-60px;bottom:-90px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{50%{transform:translate(-40px,40px) scale(1.12)}}
+@keyframes float2{50%{transform:translate(30px,-25px) scale(1.08)}}
+.wrap,main{max-width:1220px;margin:auto}
+h1{margin:0 0 8px;font:700 clamp(24px,4vw,38px)/1.15 var(--font-display);letter-spacing:-.01em}
+h2,h3{margin-top:0;font-family:var(--font-display);letter-spacing:-.005em}
+header p{position:relative;line-height:1.7;opacity:.92;font-size:15px;max-width:820px}
+.header-top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:48px;height:48px;border-radius:13px;background:#ffffff22;border:1px solid #ffffff40;display:flex;align-items:center;justify-content:center;font-size:22px;backdrop-filter:blur(6px);box-shadow:0 0 24px #ffffff30;flex:none}
+.eyebrow{margin:0 0 3px;font:600 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.theme-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ffffff40;background:#ffffff1c;color:#fff;padding:9px 16px 9px 12px;border-radius:999px;cursor:pointer;font:600 13px/1 var(--font-body);backdrop-filter:blur(6px);transition:.25s var(--ease)}
+.theme-toggle:hover{background:#ffffff30;transform:translateY(-1px)}
+.theme-toggle:active .ic{transform:rotate(25deg)}
+nav{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg),var(--bg) 75%,transparent);padding-bottom:4px}
+.tabs{max-width:1220px;margin:auto;padding:12px 12px 8px;display:flex;gap:9px;overflow:auto;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+.tabs button{border:1px solid var(--border);background:var(--surface);padding:11px 16px;border-radius:999px;font:600 13.5px/1 var(--font-display);white-space:nowrap;cursor:pointer;color:var(--text-muted);transition:.25s var(--ease);box-shadow:var(--shadow-sm);flex:none}
+.tabs button:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--text)}
+.tabs button.on{background:linear-gradient(120deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;transform:translateY(-2px);box-shadow:0 10px 26px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+main{padding:12px}.page{display:none}.page.on{display:block;animation:fade .45s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin:15px 0;box-shadow:var(--shadow-sm);transition:transform .3s var(--ease),box-shadow .3s var(--ease);animation:cardIn .5s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.title{border-left:6px solid var(--accent);padding-left:11px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.box,.step,.note{padding:13px;border-radius:13px;line-height:1.65;font-size:14.5px}
+.box{background:var(--surface-2);border:1px solid var(--border-soft);color:var(--text-muted);transition:.25s var(--ease)}
+.box:hover{border-color:var(--accent);background:var(--surface-hover)}
+.box b{color:var(--text)}
+.step{background:var(--surface-2);border:1px solid var(--border-soft);margin:7px 0;color:var(--text-muted)}
+.step b{color:var(--text)}
+.note{background:var(--surface-2);border-left:5px solid var(--brand-b);color:var(--text-muted)}
+.note b{color:var(--text)}
+.formula{background:var(--surface-2);border:1px solid var(--border-soft);padding:12px;border-radius:11px;margin:8px 0;font-family:var(--font-mono);font-size:1.02rem;overflow:auto;color:var(--text)}
+.diagram{background:var(--surface-2);border:1px solid var(--border);border-radius:15px;padding:8px;overflow:auto}
+svg{width:100%;height:auto;display:block}
+.gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.6}
+.wire{fill:none;stroke:var(--wire-off);stroke-width:4;stroke-linejoin:round}
+.bubble{fill:var(--gate-fill);stroke:var(--ink);stroke-width:2.6}
+.dot{fill:var(--ink)}
+.txt{font-size:14px;font-weight:800;fill:var(--ink);font-family:var(--font-mono)}
+.sm{font-size:11px;font-weight:800;fill:var(--text-faint);font-family:var(--font-mono)}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:center;font-family:var(--font-mono);font-size:14px}
+th,td{border:1px solid var(--border);padding:8px 7px;transition:background .3s var(--ease)}
+th{background:var(--surface-2);color:var(--text-muted)}
+tr.hl td{background:color-mix(in srgb, var(--accent) 18%, transparent);font-weight:700;box-shadow:inset 0 0 0 1px var(--accent)}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.controls input{width:90px;padding:11px;border:2px solid var(--border);border-radius:10px;font:700 17px var(--font-mono);background:var(--surface-2);color:var(--text);transition:.2s var(--ease)}
+.controls input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent)}
+.switch{border:2px solid var(--border);padding:11px 16px;border-radius:10px;background:var(--track);color:var(--text-muted);font:700 13px var(--font-mono);cursor:pointer;transition:.25s var(--ease)}
+.switch:hover{border-color:var(--accent)}
+.switch.on{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;box-shadow:0 0 18px color-mix(in srgb, var(--accent) 60%, transparent);transform:translateY(-2px)}
+.result{padding:16px 18px;border-radius:14px;background:linear-gradient(120deg,var(--brand-a),var(--brand-b));color:#fff;margin-top:12px;font-family:var(--font-mono);line-height:1.7;box-shadow:var(--shadow-sm)}
+.lamp{display:inline-block;background:#00000030;padding:8px 11px;border-radius:9px;margin:3px;font-weight:700}
+.lamp.on{background:linear-gradient(135deg,var(--amber),var(--accent-strong));color:var(--accent-ink);box-shadow:0 0 14px color-mix(in srgb, var(--amber) 55%, transparent)}
+.kmaps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.kmap{display:grid;grid-template-columns:55px repeat(4,46px);width:max-content;font-family:var(--font-mono)}
+.kmap div{border:1px solid var(--border);padding:8px;text-align:center;color:var(--text-muted)}
+.kh{background:var(--surface-2);font-weight:800;color:var(--text)}
+.one{background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);font-weight:900;box-shadow:inset 0 0 0 1px var(--accent)}
+.badge{display:inline-block;padding:6px 11px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border-soft);color:var(--text-muted);font:700 12.5px var(--font-mono);margin:3px}
+.verify-row{margin-top:12px;padding:14px 16px;border-radius:12px;background:var(--console-bg);border:1px solid var(--border-soft);color:#e6ecff;font-family:var(--font-mono);font-size:13.5px;line-height:1.8}
+.verify-row b{color:var(--accent-strong)}
+@media(max-width:800px){
+  .grid,.kmaps{grid-template-columns:1fr}
+  .card{padding:13px;border-radius:16px}
+  .diagram svg{min-width:720px}
+  .txt{font-size:11px}
+  th,td{font-size:11px;padding:5px}
+  header{padding:26px 16px 22px}
+  .header-top{flex-direction:column}
+}
+@media(prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* LIVE CIRCUIT DEMONSTRATOR */
+.live-circuit{margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--surface-2);overflow:auto}
+.live-circuit svg{min-width:720px}
+.live-wire{fill:none;stroke:var(--wire-off);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s,filter .25s}
+.live-wire.hi{stroke:var(--accent-strong);filter:drop-shadow(0 0 5px var(--accent))}
+.live-node{fill:var(--wire-off);transition:.25s}.live-node.hi{fill:var(--accent-strong);filter:drop-shadow(0 0 6px var(--accent))}
+.live-gate{fill:var(--gate-fill);stroke:var(--ink);stroke-width:3}
+.live-led{fill:#334155;stroke:var(--ink);stroke-width:3;transition:.25s}.live-led.hi{fill:var(--accent-strong);filter:drop-shadow(0 0 10px var(--accent))}
+.live-label{fill:var(--ink);font:700 15px var(--font-mono)}
+.bit-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.bit-buttons button{min-width:74px}
+
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="wrap">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-mark">⚖️</div>
+        <div><p class="eyebrow">Digital Electronics · Module 2</p><h1>Magnitude Comparator Lab</h1></div>
+      </div>
+      <button id="themeToggle" class="theme-toggle" aria-pressed="false"><span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span></button>
+    </div>
+    <p>Complete single-page learning webapp for 1-bit, 2-bit and 4-bit magnitude comparators with concepts, truth tables, K-maps, simplification, Boolean expressions, standard logic-gate diagrams, correct signal connections, applications and live interactive comparison — every input is wired straight into its truth table for instant verification.</p>
+  </div>
+</header>
+<nav><div class="tabs">
+<button class="on" data-page="intro">Introduction</button>
+<button data-page="bit1">1-Bit Comparator</button>
+<button data-page="bit2">2-Bit Comparator</button>
+<button data-page="bit4">4-Bit Comparator</button>
+<button data-page="apps">Applications</button>
+</div></nav>
+<main>
+
+<section id="intro" class="page on">
+<div class="card"><h2 class="title">What is a Magnitude Comparator?</h2>
+<p>A magnitude comparator is a combinational circuit that compares two binary numbers and produces three mutually exclusive outputs.</p>
+<div class="grid"><div class="box"><b>G — Greater</b><br>G=1 when A&gt;B.</div><div class="box"><b>E — Equal</b><br>E=1 when A=B.</div><div class="box"><b>L — Less</b><br>L=1 when A&lt;B.</div><div class="box"><b>Priority Rule</b><br>For multi-bit numbers, compare from MSB toward LSB. The first unequal bit determines the result.</div></div>
+</div>
+<div class="card"><h2 class="title">Learning Path</h2><span class="badge">1-Bit Fundamentals</span><span class="badge">2-Bit Priority Logic</span><span class="badge">4-Bit Hierarchical Comparison</span><span class="badge">Truth Tables</span><span class="badge">K-Maps</span><span class="badge">Gate Connections</span><span class="badge">Live Simulation</span></div>
+</section>
+
+<section id="bit1" class="page">
+<div class="card"><h2 class="title">1-Bit Magnitude Comparator</h2>
+<div class="formula">G = AB̅ &nbsp;&nbsp;&nbsp; E = A̅B̅ + AB = A XNOR B &nbsp;&nbsp;&nbsp; L = A̅B</div>
+<div class="tablewrap"><table><tr><th>A</th><th>B</th><th>A&gt;B (G)</th><th>A=B (E)</th><th>A&lt;B (L)</th></tr><tr id="row1-0-0"><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr id="row1-0-1"><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr><tr id="row1-1-0"><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr><tr id="row1-1-1"><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr></table></div><p style="color:var(--text-muted);font-size:13.5px;margin-top:10px">Flip A and B below in the <b style="color:var(--text)">Interactive 1-Bit Comparator</b> card — the matching row above highlights instantly.</p></div>
+<div class="card"><h2 class="title">K-Map and Simplification</h2><div class="grid"><div class="step"><b>G:</b> 1 occurs for A=1,B=0 → <b>G=AB̅</b>.</div><div class="step"><b>L:</b> 1 occurs for A=0,B=1 → <b>L=A̅B</b>.</div></div><div class="step"><b>E:</b> 1 occurs for 00 and 11. These diagonal cells cannot form a K-map group → <b>E=A̅B̅+AB=A XNOR B</b>.</div></div>
+<div class="card"><h2 class="title">Exact 1-Bit Logic Diagram</h2>
+<div class="diagram"><svg viewBox="0 0 1200 700">
+<text x="25" y="95" class="txt">A</text><path d="M50 90H180" class="wire"/><circle cx="100" cy="90" r="6" class="dot"/>
+<text x="25" y="195" class="txt">B</text><path d="M50 190H180" class="wire"/><circle cx="140" cy="190" r="6" class="dot"/>
+<path d="M100 90V430H190" class="wire"/><path d="M190 400L190 460L255 430Z" class="gate"/><circle cx="267" cy="430" r="10" class="bubble"/><path d="M277 430H360" class="wire"/><text x="285" y="415" class="txt">A̅</text>
+<path d="M140 190V590H190" class="wire"/><path d="M190 560L190 620L255 590Z" class="gate"/><circle cx="267" cy="590" r="10" class="bubble"/><path d="M277 590H360" class="wire"/><text x="285" y="575" class="txt">B̅</text>
+<path d="M100 90H450" class="wire"/><path d="M360 590H400V165H450" class="wire"/><path d="M450 65L520 65A55 55 0 0 1 520 175L450 175Z" class="gate"/><text x="470" y="125" class="sm">AND</text><path d="M575 120H1120" class="wire"/><text x="990" y="105" class="txt">G=AB̅</text>
+<path d="M360 430H410V285H450" class="wire"/><path d="M140 190H390V365H450" class="wire"/><path d="M450 265L520 265A55 55 0 0 1 520 375L450 375Z" class="gate"/><text x="470" y="325" class="sm">AND</text><path d="M575 320H1120" class="wire"/><text x="990" y="305" class="txt">L=A̅B</text>
+<path d="M100 90V480H690" class="wire"/><path d="M140 190V650H690" class="wire"/><path d="M720 460Q775 520 720 670Q835 650 930 565Q835 480 720 460Z" class="gate"/><path d="M695 460Q755 565 695 670" class="gate" fill="none"/><circle cx="942" cy="565" r="11" class="bubble"/><path d="M953 565H1120" class="wire"/><text x="790" y="570" class="sm">XNOR</text><text x="1010" y="550" class="txt">E=A⊙B</text>
+</svg></div><div class="note"><b>Connections:</b> G receives A and B̅. L receives A̅ and B. E receives original A and B directly through XNOR.</div></div>
+
+<div class="card"><h2 class="title">⚡ Live 1-Bit Gate-Level Circuit Demonstrator</h2>
+<p>Change A and B. Active HIGH signal paths glow through the actual comparator gates and the corresponding output LED turns ON.</p>
+<div class="bit-buttons"><button id="ca1" class="switch">A=0</button><button id="cb1" class="switch">B=0</button></div>
+<div class="live-circuit"><svg viewBox="0 0 1100 620">
+<text x="20" y="80" class="live-label">A</text><text x="20" y="180" class="live-label">B</text>
+<path id="w1A" d="M55 75H220" class="live-wire"/><path id="w1B" d="M55 175H220" class="live-wire"/>
+<!-- NOT B to greater -->
+<path id="w1BnotIn" d="M130 175V290H190" class="live-wire"/><path d="M190 260L190 320L250 290Z" class="live-gate"/><circle cx="262" cy="290" r="10" class="bubble"/><path id="w1Bbar" d="M272 290H390V125H450" class="live-wire"/>
+<path id="w1AG" d="M110 75H390V75H450" class="live-wire"/>
+<path d="M450 50L515 50A50 50 0 0 1 515 150L450 150Z" class="live-gate"/><text x="468" y="105" class="live-label">AND</text><path id="w1G" d="M565 100H930" class="live-wire"/><circle id="led1G" cx="980" cy="100" r="24" class="live-led"/><text x="1020" y="106" class="live-label">A&gt;B</text>
+<!-- NOT A to less -->
+<path id="w1AnotIn" d="M110 75V390H190" class="live-wire"/><path d="M190 360L190 420L250 390Z" class="live-gate"/><circle cx="262" cy="390" r="10" class="bubble"/><path id="w1Abar" d="M272 390H390V335H450" class="live-wire"/>
+<path id="w1BL" d="M130 175H370V385H450" class="live-wire"/>
+<path d="M450 310L515 310A50 50 0 0 1 515 410L450 410Z" class="live-gate"/><text x="468" y="365" class="live-label">AND</text><path id="w1L" d="M565 360H930" class="live-wire"/><circle id="led1L" cx="980" cy="360" r="24" class="live-led"/><text x="1020" y="366" class="live-label">A&lt;B</text>
+<!-- XNOR -->
+<path id="w1AE" d="M110 75V475H660" class="live-wire"/><path id="w1BE" d="M130 175V565H660" class="live-wire"/>
+<path d="M690 450Q745 500 690 590Q805 575 900 520Q805 465 690 450Z" class="live-gate"/><path d="M665 450Q725 520 665 590" class="live-gate" fill="none"/><circle cx="912" cy="520" r="11" class="bubble"/><path id="w1E" d="M923 520H950" class="live-wire"/><circle id="led1E" cx="980" cy="520" r="24" class="live-led"/><text x="1020" y="526" class="live-label">A=B</text>
+</svg></div><div id="live1Text" class="verify-row"></div></div>
+
+<div class="card"><h2 class="title">Interactive 1-Bit Comparator</h2><div class="controls"><button id="a1" class="switch">A=0</button><button id="b1" class="switch">B=0</button></div><div id="r1" class="result"></div></div>
+</section>
+
+<section id="bit2" class="page">
+<div class="card"><h2 class="title">2-Bit Magnitude Comparator</h2><p>Let A=A₁A₀ and B=B₁B₀. The MSB pair A₁,B₁ has priority. The LSB pair is considered only when the MSBs are equal.</p>
+<div class="formula">X₁=A₁ XNOR B₁; X₀=A₀ XNOR B₀</div><div class="formula">G=A₁B̅₁+X₁A₀B̅₀</div><div class="formula">E=X₁X₀</div><div class="formula">L=A̅₁B₁+X₁A̅₀B₀</div></div>
+<div class="card"><h2 class="title">Complete 2-Bit Truth Table</h2><div class="tablewrap"><table id="truth2"></table></div></div>
+<div class="card"><h2 class="title">4-Variable K-Maps</h2><p>Rows: A₁A₀ = 00,01,11,10. Columns: B₁B₀ = 00,01,11,10.</p><div class="kmaps" id="kmaps2"></div>
+<div class="note"><b>Simplified hierarchical form:</b> Define G₁=A₁B̅₁, E₁=A₁ XNOR B₁, L₁=A̅₁B₁ and similarly G₀,E₀,L₀. Then <b>G=G₁+E₁G₀</b>, <b>E=E₁E₀</b>, <b>L=L₁+E₁L₀</b>.</div></div>
+<div class="card"><h2 class="title">2-Bit Logic Diagram with Proper Gate Connections</h2>
+<p>The LSB greater/less signals pass through AND gates controlled by E₁. Therefore, lower-bit comparison affects the final output only when the MSBs are equal.</p>
+<div class="diagram"><svg viewBox="0 0 1500 1050">
+<text x="25" y="80" class="txt">A₁</text><path d="M60 75H180" class="wire"/><circle cx="110" cy="75" r="6" class="dot"/>
+<text x="25" y="180" class="txt">B₁</text><path d="M60 175H180" class="wire"/><circle cx="140" cy="175" r="6" class="dot"/>
+<text x="25" y="600" class="txt">A₀</text><path d="M60 595H180" class="wire"/><circle cx="110" cy="595" r="6" class="dot"/>
+<text x="25" y="700" class="txt">B₀</text><path d="M60 695H180" class="wire"/><circle cx="140" cy="695" r="6" class="dot"/>
+<path d="M110 75V300H190" class="wire"/><path d="M190 270L190 330L255 300Z" class="gate"/><circle cx="267" cy="300" r="10" class="bubble"/><path d="M277 300H340" class="wire"/><text x="285" y="285" class="txt">A̅₁</text>
+<path d="M140 175V400H190" class="wire"/><path d="M190 370L190 430L255 400Z" class="gate"/><circle cx="267" cy="400" r="10" class="bubble"/><path d="M277 400H340" class="wire"/><text x="285" y="385" class="txt">B̅₁</text>
+<path d="M110 75H410" class="wire"/><path d="M340 400H370V145H410" class="wire"/><path d="M410 50L475 50A50 50 0 0 1 475 150L410 150Z" class="gate"/><text x="430" y="105" class="sm">AND</text><path d="M525 100H610" class="wire"/><text x="540" y="85" class="txt">G₁</text>
+<path d="M340 300H380V225H410" class="wire"/><path d="M140 175H370V285H410" class="wire"/><path d="M410 200L475 200A50 50 0 0 1 475 300L410 300Z" class="gate"/><text x="430" y="255" class="sm">AND</text><path d="M525 250H610" class="wire"/><text x="540" y="235" class="txt">L₁</text>
+<path d="M110 75V455H410M140 175V535H410" class="wire"/><path d="M435 430Q480 480 435 560Q530 545 605 495Q530 445 435 430Z" class="gate"/><path d="M415 430Q460 495 415 560" class="gate" fill="none"/><circle cx="617" cy="495" r="10" class="bubble"/><path d="M627 495H720" class="wire"/><text x="500" y="500" class="sm">XNOR</text><text x="650" y="480" class="txt">E₁</text>
+<path d="M110 595V820H190" class="wire"/><path d="M190 790L190 850L255 820Z" class="gate"/><circle cx="267" cy="820" r="10" class="bubble"/><path d="M277 820H340" class="wire"/><text x="285" y="805" class="txt">A̅₀</text>
+<path d="M140 695V920H190" class="wire"/><path d="M190 890L190 950L255 920Z" class="gate"/><circle cx="267" cy="920" r="10" class="bubble"/><path d="M277 920H340" class="wire"/><text x="285" y="905" class="txt">B̅₀</text>
+<path d="M110 595H410" class="wire"/><path d="M340 920H370V665H410" class="wire"/><path d="M410 570L475 570A50 50 0 0 1 475 670L410 670Z" class="gate"/><text x="430" y="625" class="sm">AND</text><path d="M525 620H610" class="wire"/><text x="540" y="605" class="txt">G₀</text>
+<path d="M340 820H380V745H410" class="wire"/><path d="M140 695H370V805H410" class="wire"/><path d="M410 720L475 720A50 50 0 0 1 475 820L410 820Z" class="gate"/><text x="430" y="775" class="sm">AND</text><path d="M525 770H610" class="wire"/><text x="540" y="755" class="txt">L₀</text>
+<path d="M110 595V975H410M140 695V1030H410" class="wire"/><path d="M435 930Q480 975 435 1035Q530 1025 605 985Q530 945 435 930Z" class="gate"/><path d="M415 930Q460 985 415 1035" class="gate" fill="none"/><circle cx="617" cy="985" r="10" class="bubble"/><path d="M627 985H720" class="wire"/><text x="500" y="990" class="sm">XNOR</text><text x="650" y="970" class="txt">E₀</text>
+<path d="M720 495H790V590H850M610 620H850" class="wire"/><path d="M850 565L915 565A50 50 0 0 1 915 665L850 665Z" class="gate"/><text x="870" y="620" class="sm">AND</text><path d="M965 615H1040" class="wire"/><text x="975" y="600" class="txt">E₁G₀</text>
+<path d="M790 495V760H850M610 770H850" class="wire"/><path d="M850 715L915 715A50 50 0 0 1 915 815L850 815Z" class="gate"/><text x="870" y="770" class="sm">AND</text><path d="M965 765H1040" class="wire"/><text x="975" y="750" class="txt">E₁L₀</text>
+<path d="M760 495V900H850M720 985H850" class="wire"/><path d="M850 875L915 875A50 50 0 0 1 915 975L850 975Z" class="gate"/><text x="870" y="930" class="sm">AND</text><path d="M965 925H1430" class="wire"/><text x="1320" y="910" class="txt">E=E₁E₀</text>
+<path d="M1110 80Q1160 135 1110 230Q1215 215 1300 155Q1215 95 1110 80Z" class="gate"/><path d="M1090 80Q1140 155 1090 230" class="gate" fill="none"/><path d="M610 100H1100M1040 615H1070V205H1100" class="wire"/><path d="M1300 155H1430" class="wire"/><text x="1330" y="140" class="txt">G=A&gt;B</text>
+<path d="M1110 300Q1160 355 1110 450Q1215 435 1300 375Q1215 315 1110 300Z" class="gate"/><path d="M1090 300Q1140 375 1090 450" class="gate" fill="none"/><path d="M610 250H1070V325H1100M1040 765H1060V425H1100" class="wire"/><path d="M1300 375H1430" class="wire"/><text x="1330" y="360" class="txt">L=A&lt;B</text>
+</svg></div></div>
+
+<div class="card"><h2 class="title">⚡ Live 2-Bit Comparator Circuit</h2>
+<p>Toggle A₁, A₀, B₁ and B₀. The circuit displays the internal bit-comparator outputs and shows how E₁ enables the LSB decision.</p>
+<div class="bit-buttons"><button id="cA1" class="switch">A₁=0</button><button id="cA0" class="switch">A₀=0</button><button id="cB1" class="switch">B₁=0</button><button id="cB0" class="switch">B₀=0</button></div>
+<div class="live-circuit"><svg viewBox="0 0 1200 620">
+<text x="30" y="75" class="live-label">A₁,B₁</text><text x="30" y="390" class="live-label">A₀,B₀</text>
+<rect x="130" y="35" width="250" height="220" rx="24" class="live-gate"/><text x="255" y="80" text-anchor="middle" class="live-label">MSB 1-BIT COMPARATOR</text>
+<text x="255" y="125" text-anchor="middle" class="live-label">G₁</text><text x="255" y="165" text-anchor="middle" class="live-label">E₁</text><text x="255" y="205" text-anchor="middle" class="live-label">L₁</text>
+<rect x="130" y="345" width="250" height="220" rx="24" class="live-gate"/><text x="255" y="390" text-anchor="middle" class="live-label">LSB 1-BIT COMPARATOR</text>
+<text x="255" y="435" text-anchor="middle" class="live-label">G₀</text><text x="255" y="475" text-anchor="middle" class="live-label">E₀</text><text x="255" y="515" text-anchor="middle" class="live-label">L₀</text>
+<path id="w2G1" d="M380 120H530" class="live-wire"/><path id="w2E1" d="M380 160H480V300H530" class="live-wire"/><path id="w2L1" d="M380 200H500V500H530" class="live-wire"/>
+<path id="w2G0" d="M380 430H530V340" class="live-wire"/><path id="w2E0" d="M380 470H720V260" class="live-wire"/><path id="w2L0" d="M380 510H530V540" class="live-wire"/>
+<!-- E1G0 -->
+<path d="M530 285L595 285A50 50 0 0 1 595 385L530 385Z" class="live-gate"/><text x="548" y="340" class="live-label">AND</text><path id="w2E1G0" d="M645 335H760" class="live-wire"/>
+<!-- E1L0 -->
+<path d="M530 485L595 485A50 50 0 0 1 595 585L530 585Z" class="live-gate"/><text x="548" y="540" class="live-label">AND</text><path id="w2E1L0" d="M645 535H760" class="live-wire"/>
+<!-- equality -->
+<path d="M720 210L785 210A50 50 0 0 1 785 310L720 310Z" class="live-gate"/><text x="738" y="265" class="live-label">AND</text><path id="w2E" d="M835 260H1030" class="live-wire"/><circle id="led2E" cx="1070" cy="260" r="22" class="live-led"/><text x="1105" y="266" class="live-label">A=B</text>
+<!-- OR greater -->
+<path d="M790 70Q835 120 790 200Q890 185 965 135Q890 85 790 70Z" class="live-gate"/><path d="M770 70Q815 135 770 200" class="live-gate" fill="none"/><path id="w2G1or" d="M530 120H780" class="live-wire"/><path id="w2Gterm" d="M760 335V180H780" class="live-wire"/><path id="w2G" d="M965 135H1030" class="live-wire"/><circle id="led2G" cx="1070" cy="135" r="22" class="live-led"/><text x="1105" y="141" class="live-label">A&gt;B</text>
+<!-- OR less -->
+<path d="M790 400Q835 450 790 530Q890 515 965 465Q890 415 790 400Z" class="live-gate"/><path d="M770 400Q815 465 770 530" class="live-gate" fill="none"/><path id="w2L1or" d="M500 200H740V420H780" class="live-wire"/><path id="w2Lterm" d="M760 535V510H780" class="live-wire"/><path id="w2L" d="M965 465H1030" class="live-wire"/><circle id="led2L" cx="1070" cy="465" r="22" class="live-led"/><text x="1105" y="471" class="live-label">A&lt;B</text>
+</svg></div><div id="live2Text" class="verify-row"></div></div>
+
+<div class="card"><h2 class="title">Interactive 2-Bit Comparator</h2><div class="controls">A (0–3)<input id="a2" type="number" min="0" max="3" value="2">B (0–3)<input id="b2" type="number" min="0" max="3" value="1"></div><div id="r2" class="result"></div><div id="trace2"></div></div>
+</section>
+
+<section id="bit4" class="page">
+<div class="card"><h2 class="title">4-Bit Magnitude Comparator</h2><p>Let A=A₃A₂A₁A₀ and B=B₃B₂B₁B₀. Comparison starts at bit 3. A lower bit is considered only if every higher bit pair is equal.</p>
+<div class="formula">Xᵢ=Aᵢ XNOR Bᵢ; &nbsp; E=X₃X₂X₁X₀</div>
+<div class="formula">G=A₃B̅₃+X₃A₂B̅₂+X₃X₂A₁B̅₁+X₃X₂X₁A₀B̅₀</div>
+<div class="formula">L=A̅₃B₃+X₃A̅₂B₂+X₃X₂A̅₁B₁+X₃X₂X₁A̅₀B₀</div></div>
+<div class="card"><h2 class="title">4-Bit Block / Logic Architecture</h2>
+<div class="diagram"><svg viewBox="0 0 1200 500">
+<text x="30" y="40" class="txt">MSB priority</text><text x="1030" y="40" class="txt">LSB</text>
+<g class="txt"><text x="120" y="85">A₃,B₃</text><text x="370" y="85">A₂,B₂</text><text x="620" y="85">A₁,B₁</text><text x="870" y="85">A₀,B₀</text></g>
+<rect x="70" y="110" width="200" height="220" rx="22" class="gate"/><rect x="320" y="110" width="200" height="220" rx="22" class="gate"/><rect x="570" y="110" width="200" height="220" rx="22" class="gate"/><rect x="820" y="110" width="200" height="220" rx="22" class="gate"/>
+<text x="170" y="160" text-anchor="middle" class="txt">BIT 3 SLICE</text><text x="420" y="160" text-anchor="middle" class="txt">BIT 2 SLICE</text><text x="670" y="160" text-anchor="middle" class="txt">BIT 1 SLICE</text><text x="920" y="160" text-anchor="middle" class="txt">BIT 0 SLICE</text>
+<text x="170" y="210" text-anchor="middle" class="txt">G₃=A₃B̅₃</text><text x="170" y="240" text-anchor="middle" class="txt">E₃=A₃⊙B₃</text><text x="170" y="270" text-anchor="middle" class="txt">L₃=A̅₃B₃</text>
+<text x="420" y="210" text-anchor="middle" class="txt">G₂,E₂,L₂</text><text x="670" y="210" text-anchor="middle" class="txt">G₁,E₁,L₁</text><text x="920" y="210" text-anchor="middle" class="txt">G₀,E₀,L₀</text>
+<path d="M270 270H320M520 270H570M770 270H820" class="wire"/><text x="282" y="255" class="txt">E₃</text><text x="532" y="255" class="txt">E₂</text><text x="782" y="255" class="txt">E₁</text>
+<path d="M170 330V400H510M420 330V400H510M670 330V400H510M920 330V400H510" class="wire"/><rect x="510" y="365" width="240" height="90" rx="24" class="gate"/><text x="630" y="405" text-anchor="middle" class="txt">PRIORITY COMBINE</text><text x="630" y="432" text-anchor="middle" class="sm">AND / OR / XNOR logic</text><path d="M750 410H1140" class="wire"/><text x="980" y="395" class="txt">G, E, L</text>
+</svg></div>
+<div class="note">Each bit slice uses the exact 1-bit comparator principle: NOT + AND for greater/less and XNOR for equality. Higher-bit equality terms enable lower-bit decisions. A direct 4-bit truth table contains 256 rows, and direct K-map minimization would require an 8-variable K-map; therefore hierarchical Boolean simplification is the practical implementation method.</div></div>
+
+<div class="card"><h2 class="title">⚡ Live 4-Bit Priority Circuit Demonstrator</h2>
+<p>Enter decimal values in the interactive panel below. This live signal chain shows which bit position becomes the deciding stage. Equal higher stages glow until the first unequal bit is reached.</p>
+<div class="live-circuit"><svg viewBox="0 0 1200 360">
+<text x="40" y="45" class="live-label">MSB</text><text x="1090" y="45" class="live-label">LSB</text>
+<g id="stage3"><rect x="70" y="80" width="190" height="150" rx="22" class="live-gate"/><text x="165" y="120" text-anchor="middle" class="live-label">BIT 3</text><text id="s3txt" x="165" y="165" text-anchor="middle" class="live-label">A₃ ? B₃</text><circle id="s3led" cx="165" cy="205" r="15" class="live-led"/></g>
+<path id="chain32" d="M260 155H350" class="live-wire"/>
+<g id="stage2"><rect x="350" y="80" width="190" height="150" rx="22" class="live-gate"/><text x="445" y="120" text-anchor="middle" class="live-label">BIT 2</text><text id="s2txt" x="445" y="165" text-anchor="middle" class="live-label">A₂ ? B₂</text><circle id="s2led" cx="445" cy="205" r="15" class="live-led"/></g>
+<path id="chain21" d="M540 155H630" class="live-wire"/>
+<g id="stage1"><rect x="630" y="80" width="190" height="150" rx="22" class="live-gate"/><text x="725" y="120" text-anchor="middle" class="live-label">BIT 1</text><text id="s1txt" x="725" y="165" text-anchor="middle" class="live-label">A₁ ? B₁</text><circle id="s1led" cx="725" cy="205" r="15" class="live-led"/></g>
+<path id="chain10" d="M820 155H910" class="live-wire"/>
+<g id="stage0"><rect x="910" y="80" width="190" height="150" rx="22" class="live-gate"/><text x="1005" y="120" text-anchor="middle" class="live-label">BIT 0</text><text id="s0txt" x="1005" y="165" text-anchor="middle" class="live-label">A₀ ? B₀</text><circle id="s0led" cx="1005" cy="205" r="15" class="live-led"/></g>
+<text id="decision4" x="600" y="305" text-anchor="middle" class="live-label">Decision trace</text>
+</svg></div></div>
+
+<div class="card"><h2 class="title">Interactive 4-Bit Comparator & Decision Trace</h2><p style="color:var(--text-muted);font-size:13.5px">A full 4-bit truth table has 256 rows, so instead of listing them all, the panel below renders the exact truth-table row for whatever A and B you enter — a live way to verify any combination.</p><div class="controls">A (0–15)<input id="a4" type="number" min="0" max="15" value="11">B (0–15)<input id="b4" type="number" min="0" max="15" value="9"></div><div id="r4" class="result"></div><div id="verify4" class="verify-row"></div><div id="trace4"></div></div>
+</section>
+
+<section id="apps" class="page"><div class="card"><h2 class="title">Real-Time Applications</h2><div class="grid">
+<div class="box"><b>CPU / ALU</b><br>Implements relational instructions and conditional decisions.</div>
+<div class="box"><b>Sorting Hardware</b><br>Compares values to establish ascending or descending order.</div>
+<div class="box"><b>Threshold Detection</b><br>Checks whether sensor data is above or below a reference.</div>
+<div class="box"><b>Digital Control</b><br>Activates actions based on greater, equal, or less conditions.</div>
+<div class="box"><b>Address Comparison</b><br>Compares addresses, counters, IDs and digital words.</div>
+<div class="box"><b>Cascaded Comparators</b><br>Extends the same MSB-priority concept to larger binary numbers.</div>
+</div><div class="formula"><b>Golden Rule:</b> Compare from MSB to LSB. The first unequal corresponding bit pair determines the larger number.</div></div></section>
+</main>
+<script>
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById(b.dataset.page).classList.add('on');scrollTo({top:0,behavior:'smooth'})});
+const lamps=(a,b)=>`<span class="lamp ${a>b?'on':''}">A&gt;B = ${a>b?1:0}</span><span class="lamp ${a===b?'on':''}">A=B = ${a===b?1:0}</span><span class="lamp ${a<b?'on':''}">A&lt;B = ${a<b?1:0}</span>`;
+const bit=e=>e.classList.contains('on')?1:0;
+function run1(){let A=bit(a1),B=bit(b1);r1.innerHTML=lamps(A,B);document.querySelectorAll('[id^="row1-"]').forEach(r=>r.classList.remove('hl'));let row=document.getElementById('row1-'+A+'-'+B);if(row)row.classList.add('hl')}
+[a1,b1].forEach(e=>e.onclick=()=>{e.classList.toggle('on');e.textContent=e.id[0].toUpperCase()+'='+bit(e);run1()});
+let rows='<tr><th>A₁</th><th>A₀</th><th>B₁</th><th>B₀</th><th>A</th><th>B</th><th>G</th><th>E</th><th>L</th></tr>';
+for(let A=0;A<4;A++)for(let B=0;B<4;B++){let aa=A.toString(2).padStart(2,'0'),bb=B.toString(2).padStart(2,'0');rows+=`<tr id="row2-${A}-${B}"><td>${aa[0]}</td><td>${aa[1]}</td><td>${bb[0]}</td><td>${bb[1]}</td><td>${aa}</td><td>${bb}</td><td>${A>B?1:0}</td><td>${A===B?1:0}</td><td>${A<B?1:0}</td></tr>`}truth2.innerHTML=rows;
+const gray=['00','01','11','10'];
+function map(title,fn){let h=`<div><h3>${title}</h3><div class="kmap"><div class="kh">A\\\\B</div>${gray.map(x=>`<div class="kh">${x}</div>`).join('')}`;gray.forEach(ar=>{h+=`<div class="kh">${ar}</div>`;gray.forEach(br=>{let A=parseInt(ar,2),B=parseInt(br,2),v=fn(A,B);h+=`<div class="${v?'one':''}">${v}</div>`})});return h+'</div></div>'}
+kmaps2.innerHTML=map('G: A > B',(a,b)=>a>b?1:0)+map('E: A = B',(a,b)=>a===b?1:0)+map('L: A < B',(a,b)=>a<b?1:0);
+function run2(){let A=Math.max(0,Math.min(3,+a2.value||0)),B=Math.max(0,Math.min(3,+b2.value||0)),aa=A.toString(2).padStart(2,'0'),bb=B.toString(2).padStart(2,'0');r2.innerHTML=`A=${aa}₂ (${A}) &nbsp; B=${bb}₂ (${B})<br><br>${lamps(A,B)}`;trace2.innerHTML=aa[0]!==bb[0]?`<div class="step"><b>MSB decides:</b> A₁=${aa[0]}, B₁=${bb[0]} → ${A>B?'A>B':'A<B'}. LSB is ignored.</div>`:`<div class="step"><b>MSBs equal:</b> E₁=1. Compare A₀=${aa[1]} and B₀=${bb[1]} → ${A===B?'A=B':A>B?'A>B':'A<B'}.</div>`;document.querySelectorAll('[id^="row2-"]').forEach(r=>r.classList.remove('hl'));let row=document.getElementById('row2-'+A+'-'+B);if(row){row.classList.add('hl');row.scrollIntoView({behavior:'smooth',block:'nearest'})}}
+a2.oninput=b2.oninput=run2;
+function run4(){let A=Math.max(0,Math.min(15,+a4.value||0)),B=Math.max(0,Math.min(15,+b4.value||0)),aa=A.toString(2).padStart(4,'0'),bb=B.toString(2).padStart(4,'0');r4.innerHTML=`A=${aa}₂ (${A}) &nbsp; B=${bb}₂ (${B})<br><br>${lamps(A,B)}`;let h='',done=false;for(let i=0;i<4;i++){let k=3-i;if(!done&&aa[i]===bb[i])h+=`<div class="step">Bit ${k}: A${k}=${aa[i]}, B${k}=${bb[i]} → equal; continue to next lower bit.</div>`;else if(!done){h+=`<div class="step"><b>Bit ${k} decides:</b> A${k}=${aa[i]}, B${k}=${bb[i]} → ${aa[i]>bb[i]?'A>B':'A<B'}. Lower bits cannot change the result.</div>`;done=true}}if(!done)h+='<div class="step"><b>All four bit pairs are equal → A=B.</b></div>';trace4.innerHTML=h;
+verify4.innerHTML=`<b>Live truth-table row</b><br>A₃A₂A₁A₀ = ${aa} &nbsp; B₃B₂B₁B₀ = ${bb}<br>G = ${A>B?1:0} &nbsp; E = ${A===B?1:0} &nbsp; L = ${A<B?1:0}`;}
+a4.oninput=b4.oninput=run4;
+run1();run2();run4();
+
+/* Theme toggle */
+const bodyEl=document.body,themeToggle=document.getElementById('themeToggle'),themeIcon=document.getElementById('themeIcon'),themeLabel=document.getElementById('themeLabel');
+let theme=(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+function applyTheme(t){bodyEl.setAttribute('data-theme',t);themeToggle.setAttribute('aria-pressed',t==='light');themeIcon.textContent=t==='dark'?'🌙':'☀️';themeLabel.textContent=t==='dark'?'Dark':'Light'}
+applyTheme(theme);
+themeToggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme(theme)});
+
+/* Animated live circuit helpers */
+function hi(id,v){const e=document.getElementById(id);if(e)e.classList.toggle('hi',!!v)}
+let c1A=0,c1B=0;
+function live1(){
+ const nb=1-c1B,na=1-c1A,G=c1A&nb,L=na&c1B,E=+(c1A===c1B);
+ ['w1A','w1AG','w1AE','w1AnotIn'].forEach(id=>hi(id,c1A));
+ ['w1B','w1BL','w1BE','w1BnotIn'].forEach(id=>hi(id,c1B));
+ hi('w1Bbar',nb);hi('w1Abar',na);hi('w1G',G);hi('w1L',L);hi('w1E',E);hi('led1G',G);hi('led1L',L);hi('led1E',E);
+ live1Text.innerHTML=`A=${c1A}, B=${c1B} → B̅=${nb}, A̅=${na}<br><b>G=AB̅=${G} &nbsp; E=A⊙B=${E} &nbsp; L=A̅B=${L}</b>`;
+}
+[['ca1','A'],['cb1','B']].forEach(([id,n])=>document.getElementById(id).onclick=function(){if(id==='ca1')c1A^=1;else c1B^=1;this.classList.toggle('on');this.textContent=n+'='+(id==='ca1'?c1A:c1B);live1()});
+
+let cbits={A1:0,A0:0,B1:0,B0:0};
+['A1','A0','B1','B0'].forEach(n=>document.getElementById('c'+n).onclick=function(){cbits[n]^=1;this.classList.toggle('on');this.textContent=n.replace('1','₁').replace('0','₀')+'='+cbits[n];live2()});
+function live2(){
+ const {A1,A0,B1,B0}=cbits,G1=A1&(1-B1),E1=+(A1===B1),L1=(1-A1)&B1,G0=A0&(1-B0),E0=+(A0===B0),L0=(1-A0)&B0;
+ const tG=E1&G0,tL=E1&L0,G=G1|tG,E=E1&E0,L=L1|tL;
+ hi('w2G1',G1);hi('w2E1',E1);hi('w2L1',L1);hi('w2G0',G0);hi('w2E0',E0);hi('w2L0',L0);
+ hi('w2E1G0',tG);hi('w2E1L0',tL);hi('w2G1or',G1);hi('w2Gterm',tG);hi('w2L1or',L1);hi('w2Lterm',tL);
+ hi('w2G',G);hi('w2E',E);hi('w2L',L);hi('led2G',G);hi('led2E',E);hi('led2L',L);
+ live2Text.innerHTML=`G₁=${G1}, E₁=${E1}, L₁=${L1} &nbsp; | &nbsp; G₀=${G0}, E₀=${E0}, L₀=${L0}<br><b>G=G₁+E₁G₀=${G} &nbsp; E=E₁E₀=${E} &nbsp; L=L₁+E₁L₀=${L}</b>`;
+}
+function live4(){
+ let A=Math.max(0,Math.min(15,+a4.value||0)),B=Math.max(0,Math.min(15,+b4.value||0)),aa=A.toString(2).padStart(4,'0'),bb=B.toString(2).padStart(4,'0'),active=true,decision='All bits equal → A = B';
+ for(let i=0;i<4;i++){let k=3-i,equal=aa[i]===bb[i],led=document.getElementById('s'+k+'led'),txt=document.getElementById('s'+k+'txt');txt.textContent=`A${['₀','₁','₂','₃'][k]}=${aa[i]}  ${equal?'=':aa[i]>bb[i]?'>':'<'}  B${['₀','₁','₂','₃'][k]}=${bb[i]}`;led.classList.toggle('hi',active);if(active&&!equal){decision=`Bit ${k} decides → A ${aa[i]>bb[i]?'>':'<'} B`;active=false}if(k>0)hi('chain'+k+(k-1),active&&equal)}
+ decision4.textContent=decision;
+}
+const oldRun4=run4;run4=function(){oldRun4();live4()};
+a4.oninput=b4.oninput=run4;
+live1();live2();live4();
+
+</script></body></html>
