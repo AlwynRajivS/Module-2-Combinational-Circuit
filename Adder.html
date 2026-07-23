@@ -207,6 +207,65 @@ tr.hl{background:color-mix(in srgb, var(--accent) 18%, transparent);font-weight:
   border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:1.02rem;color:var(--text);
 }
 
+/* ============ K-MAP ============ */
+.kmap-block{border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:16px;margin:14px 0;background:var(--surface-2)}
+.kmap-block h4{margin:0 0 3px;font-family:var(--font-display);font-size:15px;color:var(--text)}
+.kmap-sub{margin:0 0 14px;font-size:13px;color:var(--text-faint)}
+.kmap-flex{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.kmap-gridwrap{position:relative;flex:none}
+.kmap-gridcss{display:grid;gap:4px}
+.kcell{
+  width:64px;height:64px;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-mono);
+  position:relative;transition:.3s var(--ease);
+}
+.kcell b{font-size:20px;line-height:1;color:var(--text-faint)}
+.kcell.one b{color:var(--text)}
+.kcell small{font-size:9.5px;color:var(--text-faint);margin-top:3px;letter-spacing:.03em}
+.kcell.head{background:transparent;border:none;color:var(--text-faint);font:700 12px/1 var(--font-mono);
+  display:flex;align-items:center;justify-content:center;letter-spacing:.03em}
+.kcell.corner{background:transparent;border:none;font-size:10px;color:var(--text-faint);line-height:1.3;text-align:center}
+.kgroup{
+  position:absolute;border-radius:14px;border:3px solid var(--g);pointer-events:none;
+  background:color-mix(in srgb, var(--g) 16%, transparent);opacity:0;transform:scale(.85);
+  transition:opacity .45s var(--ease),transform .45s var(--ease);z-index:2;
+}
+.kgroup.show{opacity:1;transform:scale(1)}
+.kgroup .glabel{
+  position:absolute;left:50%;top:-13px;transform:translateX(-50%);background:var(--g);color:#fff;
+  font:700 11px/1 var(--font-mono);padding:3px 8px;border-radius:999px;white-space:nowrap;
+  box-shadow:0 4px 10px -3px rgba(0,0,0,.4);
+}
+.kmap-legend{display:flex;flex-direction:column;gap:9px;min-width:230px;flex:1}
+.klegend-item{
+  display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:var(--surface);
+  border:1px solid var(--border-soft);opacity:.35;transform:translateX(6px);transition:.4s var(--ease);font-size:13.5px;
+}
+.klegend-item.show{opacity:1;transform:none}
+.klegend-swatch{width:16px;height:16px;border-radius:5px;background:var(--g);flex:none;box-shadow:0 0 0 3px color-mix(in srgb, var(--g) 25%, transparent)}
+.klegend-item code{font-family:var(--font-mono);font-weight:700;color:var(--text)}
+.kmap-steps{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.kstep{display:none;font-size:13.5px;line-height:1.65;color:var(--text-muted);padding:5px 0}
+.kstep.show{display:block;animation:enter .4s var(--ease)}
+.kstep b{color:var(--text)}
+.kctrls{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.kbtn{
+  border:1px solid var(--border);background:var(--surface);color:var(--text);font:600 12.5px/1 var(--font-display);
+  padding:9px 15px;border-radius:999px;cursor:pointer;transition:.25s var(--ease);
+}
+.kbtn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.kbtn.primary{
+  background:linear-gradient(120deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-color:transparent;
+}
+.kfinal{
+  margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface);
+  border:1.5px solid var(--border-soft);font-family:var(--font-mono);font-size:1.02rem;color:var(--text-faint);
+  opacity:.4;transition:.5s var(--ease);
+}
+.kfinal.show{opacity:1;color:var(--text);border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent)}
+.kfinal b{color:var(--accent)}
+[data-theme="light"] .kfinal b{color:#b45f00}
+
 footer{max-width:1180px;margin:20px auto 0;padding:20px 18px 40px;text-align:center;color:var(--text-faint);font-size:13px}
 
 @media(max-width:720px){
@@ -244,7 +303,7 @@ footer{max-width:1180px;margin:20px auto 0;padding:20px 18px 40px;text-align:cen
       <span class="ic" id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
     </button>
   </div>
-  <p class="tagline">Flip the switches, watch the signal glow travel down the wires, and see exactly how binary addition and subtraction are built from XOR, AND, OR and NOT gates — concept, truth table, Boolean expression and gate-level wiring, all live.</p>
+  <p class="tagline">Flip the switches, watch the signal glow travel down the wires, and see exactly how binary addition and subtraction are built from XOR, AND, OR and NOT gates — concept, truth table, Boolean expression, K-map simplification and gate-level wiring, all live.</p>
 </header>
 <main>
   <div class="tabs-wrap"><div class="tabs" id="tabs"></div></div>
@@ -278,7 +337,184 @@ function diag(c){if(c.id==='ha'||c.id==='hs'){let s=c.id==='hs';return `<svg vie
 if(c.id==='fa'||c.id==='fs'){let s=c.id==='fs';return `<svg viewBox="0 0 1150 530"><text x="20" y="25" class="txt">${c.n} — Exact Standard Gate Connections</text><text x="20" y="75" class="txt">A</text><text x="20" y="135" class="txt">B</text><text x="20" y="200" class="txt">${s?'Bin':'Cin'}</text>${W(c.id+'i0','M45 70H120')}${W(c.id+'i1','M45 130H100')}${W(c.id+'i2','M45 195H80')}${D(120,70)}${D(100,130)}${D(80,195)}${W(c.id+'x1a','M120 70H230V80H280')}${W(c.id+'x1b','M100 130H210V115H280')}${XOR(280,62,'XOR1')}${W(c.id+'mid','M374 100H500')}${D(440,100)}${W(c.id+'x2a','M500 100H570V105H620')}${W(c.id+'x2b','M80 195H550V140H620')}${XOR(620,87,'XOR2')}${W(c.id+'o0','M714 125H980')}<text x="995" y="130" class="txt">${c.o[0]}</text>${s?`${W('fsni','M120 70V290H210')}${NOT(210,256)}${W('fsno','M288 290H410V300H470')}${W('fsbb','M100 130V340H470')}${AND(470,288,'AND1')}${W('fsq1','M546 326H840V350H890')}${W('fsdi','M440 100V405H550')}${NOT(550,371)}${W('fsdo','M628 405H710V415H760')}${W('fsbi','M80 195V455H760')}${AND(760,403,'AND2')}${W('fsq2','M836 441H860V390H890')}`:`${W('faa','M120 70V310H320')}${W('fab','M100 130V350H320')}${AND(320,298,'AND1')}${W('faq1','M396 336H840V350H890')}${W('fas','M440 100V410H600')}${W('fac','M80 195V450H600')}${AND(600,398,'AND2')}${W('faq2','M676 436H840V390H890')}`}${OR(890,330)}${W(c.id+'o1','M976 368H980')}<text x="995" y="373" class="txt">${c.o[1]}</text></svg>`}
 let a=c.id==='fa2',b=a?'HALF ADDER':'HALF SUBTRACTOR';return `<svg viewBox="0 0 1100 450"><text x="20" y="25" class="txt">${c.n}</text><text x="20" y="85" class="txt">A</text><text x="20" y="145" class="txt">B</text><text x="20" y="240" class="txt">${a?'Cin':'Bin'}</text>${W(c.id+'i0','M45 80H150')}${W(c.id+'i1','M45 140H150')}<rect x="150" y="50" width="190" height="120" rx="15" class="gate"/><text x="245" y="110" text-anchor="middle" class="txt">${b} 1</text>${W(c.id+'mid','M340 80H480')}${W(c.id+'i2','M45 235H440V145H480')}<rect x="480" y="50" width="200" height="160" rx="15" class="gate"/><text x="580" y="125" text-anchor="middle" class="txt">${b} 2</text>${W(c.id+'o0','M680 80H950')}${W(c.id+'q1','M340 145H740V300H800')}${W(c.id+'q2','M680 180H760V340H800')}${OR(800,290)}${W(c.id+'o1','M886 328H950')}<text x="965" y="85" class="txt">${c.o[0]}</text><text x="965" y="333" class="txt">${c.o[1]}</text></svg>`}
 function rows(c){let z='';for(let n=0;n<1<<c.i.length;n++){let v=c.i.map((_,j)=>(n>>(c.i.length-1-j))&1),o=c.f(v);z+=`<tr id="${c.id}r${n}">${[...v,...o].map(x=>`<td>${x}</td>`).join('')}</tr>`}return z}
-function panel(c,n){let x=X[c.id];return `<section id="${c.id}" class="panel ${n?'':'active'}"><div class="card"><h2 class="title">${c.n}</h2><div class="learn"><div class="box"><h4>💡 What is it?</h4><p>${x[0]}</p></div><div class="box"><h4>⚙️ How does it work?</h4><p>${x[1]}</p></div><div class="box"><h4>🌍 Real-Time Application</h4><p>${x[2]}</p></div><div class="box"><h4>🧠 Learning Point</h4><p>${x[3]}</p></div></div><h3 class="title" style="font-size:16px;margin-top:22px">🎛 Live Simulator</h3><div class="io">${c.i.map((q,k)=>`<div class="io-group"><b>${q}</b><button id="${c.id}b${k}" class="sw" onclick="flip('${c.id}',${k})">0</button></div>`).join('')}${c.o.map((q,k)=>`<div class="out" id="${c.id}out${k}">${q}: <span id="${c.id}v${k}">0</span></div>`).join('')}</div></div><div class="card"><h3 class="title" style="font-size:18px">🔌 Animated Logic Diagram</h3><div class="diagram">${diag(c)}</div><div class="note"><b>Signal Flow:</b> ${x[4]} Glowing wires with a traveling pulse represent logic HIGH (1).</div></div><div class="card"><h3 class="title" style="font-size:18px">📋 Truth Table</h3><p style="color:var(--text-muted);font-size:14px;margin-top:6px">The active input combination is highlighted automatically.</p><table><tr>${[...c.i,...c.o].map(q=>`<th>${q}</th>`).join('')}</tr>${rows(c)}</table></div><div class="card"><h3 class="title" style="font-size:18px">🧠 Boolean Expression &amp; Simplification</h3>${c.e.map(q=>`<div class="formula">${q}</div>`).join('')}<div class="note">XOR is HIGH when inputs differ. AND is HIGH when all required inputs are HIGH. OR combines Carry/Borrow conditions. NOT complements a signal.</div></div></section>`}
+
+/* ============================================================
+   K-MAP MODEL, LAYOUT MATH & INTERACTIVE RENDERING
+   (purely additive — does not touch the gate-level diag() wiring)
+   ============================================================ */
+const KPAL=['--accent','--brand-a','--brand-b','--brand-c'];
+
+// minterm (as used by rows()/f(), MSB-first) -> {row,col} on a standard Gray-code K-map
+function kmCellPos(m,nv){
+  if(nv===2) return {r:(m>>1)&1,c:m&1};
+  const A=(m>>2)&1,B=(m>>1)&1,Cc=m&1;
+  const gray=[[0,0],[0,1],[1,1],[1,0]]; // BC in Gray-code column order
+  const c=gray.findIndex(p=>p[0]===B&&p[1]===Cc);
+  return {r:A,c};
+}
+// inverse: grid position -> minterm number
+function kmMintermAt(r,c,nv){
+  if(nv===2) return (r<<1)|c;
+  const gray=[[0,0],[0,1],[1,1],[1,0]];
+  const [B,Cc]=gray[c];
+  return (r<<2)|(B<<1)|Cc;
+}
+
+/* Generic 2-variable map builders (reused across every 2-input stage) */
+function xorMap(v1,v2,label){
+  return {vars:[v1,v2],n:2,m:[1,2],
+    groups:[{c:[1],t:v1+'′'+v2},{c:[2],t:v1+v2+'′'}],
+    note:`The two 1s sit diagonally opposite each other, so they are <b>not adjacent</b> — diagonal cells can never be grouped on a K-map. Each 1 stays its own group of size 1.`,
+    final:`${label} = ${v1}′${v2} + ${v1}${v2}′  =  ${v1} ⊕ ${v2}`};
+}
+function andMap(v1,v2,label){
+  return {vars:[v1,v2],n:2,m:[3],
+    groups:[{c:[3],t:v1+v2}],
+    note:`Only one cell is 1 — where ${v1}=1 and ${v2}=1. A lone 1 with no adjacent 1s forms a group of size 1, so the term can't shrink any further.`,
+    final:`${label} = ${v1}${v2}`};
+}
+function borrowMap(v1,v2,label){
+  return {vars:[v1,v2],n:2,m:[1],
+    groups:[{c:[1],t:v1+'′'+v2}],
+    note:`Only one cell is 1 — where ${v1}=0 and ${v2}=1, the single case that needs a borrow.`,
+    final:`${label} = ${v1}′${v2}`};
+}
+function orMap(v1,v2,label){
+  return {vars:[v1,v2],n:2,m:[1,2,3],
+    groups:[{c:[1,3],t:v2},{c:[2,3],t:v1}],
+    note:`Three 1s form two overlapping pairs that together cover every 1 on the map — the classic OR-gate K-map.`,
+    final:`${label} = ${v1} + ${v2}`};
+}
+
+/* Direct (single 3-variable-map) circuits: keys match the output names in c.o exactly */
+const KM={
+ ha:{ Sum:xorMap('A','B','Sum'), Carry:andMap('A','B','Carry') },
+ fa:{
+  Sum:{vars:['A','B','Cin'],n:3,m:[1,2,4,7],
+   groups:[{c:[1],t:'A′B′Cin'},{c:[2],t:'A′BCin′'},{c:[4],t:'AB′Cin′'},{c:[7],t:'ABCin'}],
+   note:`The four 1s form a checkerboard — no two share an edge. That pattern is the K-map signature of an odd-parity (XOR) function, so it cannot be reduced below a 3-input XOR.`,
+   final:'Sum = A′B′Cin + A′BCin′ + AB′Cin′ + ABCin  =  A ⊕ B ⊕ Cin'},
+  Cout:{vars:['A','B','Cin'],n:3,m:[3,5,6,7],
+   groups:[{c:[3,7],t:'AB'},{c:[5,7],t:'ACin'},{c:[6,7],t:'BCin'}],
+   note:`Minterm 7 (A=B=Cin=1) is adjacent to all three other 1s, so it legally belongs to three different pairs at once — reusing a 1 across overlapping groups is standard K-map practice.`,
+   final:'Cout = AB + ACin + BCin'}
+ },
+ hs:{ Difference:xorMap('A','B','Difference'), Borrow:borrowMap('A','B','Borrow') },
+ fs:{
+  Difference:{vars:['A','B','Bin'],n:3,m:[1,2,4,7],
+   groups:[{c:[1],t:'A′B′Bin'},{c:[2],t:'A′BBin′'},{c:[4],t:'AB′Bin′'},{c:[7],t:'ABBin'}],
+   note:`Same checkerboard pattern as any 3-input XOR — Difference = A⊕B⊕Bin, so no two 1s are adjacent and no grouping is possible.`,
+   final:'Difference = A′B′Bin + A′BBin′ + AB′Bin′ + ABBin  =  A ⊕ B ⊕ Bin'},
+  Bout:{vars:['A','B','Bin'],n:3,m:[1,2,3,7],
+   groups:[{c:[1,3],t:'A′Bin'},{c:[2,3],t:'A′B'},{c:[3,7],t:'BBin'}],
+   note:`Minterm 3 (A=0,B=1,Bin=1) is shared by two pairs. Notice A is complemented in every surviving term — a borrow only ever happens when the top bit A is 0.`,
+   final:'Bout = A′B + A′Bin + BBin'}
+ }
+};
+
+/* Decomposed (2×Half-Adder / 2×Half-Subtractor) circuits: a sequence of small 2-var maps */
+const KM2={
+ fa2:[
+   {label:'K-map: HA1 output S1',km:xorMap('A','B','S1'),desc:'Stage 1 · A, B → Half Adder 1'},
+   {label:'K-map: HA1 output C1',km:andMap('A','B','C1'),desc:'Stage 1 · A, B → Half Adder 1'},
+   {label:'K-map: HA2 output Sum',km:xorMap('S1','Cin','Sum'),desc:'Stage 2 · S1, Cin → Half Adder 2'},
+   {label:'K-map: HA2 output C2',km:andMap('S1','Cin','C2'),desc:'Stage 2 · S1, Cin → Half Adder 2'},
+   {label:'K-map: Final Cout',km:orMap('C1','C2','Cout'),desc:'Stage 3 · C1, C2 → OR gate'}
+ ],
+ fs2:[
+   {label:'K-map: HS1 output D1',km:xorMap('A','B','D1'),desc:'Stage 1 · A, B → Half Subtractor 1'},
+   {label:'K-map: HS1 output B1',km:borrowMap('A','B','B1'),desc:'Stage 1 · A, B → Half Subtractor 1'},
+   {label:'K-map: HS2 output Difference',km:xorMap('D1','Bin','Difference'),desc:'Stage 2 · D1, Bin → Half Subtractor 2'},
+   {label:'K-map: HS2 output B2',km:borrowMap('D1','Bin','B2'),desc:'Stage 2 · D1, Bin → Half Subtractor 2'},
+   {label:'K-map: Final Bout',km:orMap('B1','B2','Bout'),desc:'Stage 3 · B1, B2 → OR gate'}
+ ]
+};
+
+function kmapHTML(kd,title,uid){
+  const nv=kd.n, cols=nv===2?2:4, rows=2;
+  const colHead=nv===2?['0','1']:['00','01','11','10'];
+  const rowHead=['0','1'];
+  const cornerLabel=nv===2?`${kd.vars[0]}\\${kd.vars[1]}`:`${kd.vars[0]}\\${kd.vars[1]}${kd.vars[2]}`;
+  let cellsHTML=`<div class="kcell corner">${cornerLabel}</div>`;
+  colHead.forEach(h=>cellsHTML+=`<div class="kcell head">${h}</div>`);
+  for(let r=0;r<rows;r++){
+    cellsHTML+=`<div class="kcell head">${rowHead[r]}</div>`;
+    for(let c2=0;c2<cols;c2++){
+      const m=kmMintermAt(r,c2,nv);
+      const isOne=kd.m.includes(m);
+      cellsHTML+=`<div class="kcell ${isOne?'one':''}"><b>${isOne?1:0}</b><small>m${m}</small></div>`;
+    }
+  }
+  let overlays='',legend='',steps='';
+  kd.groups.forEach((grp,gi)=>{
+    const color=`var(${KPAL[gi%KPAL.length]})`;
+    let r1=99,r2=-1,c1=99,c2=-1;
+    grp.c.forEach(m=>{const p=kmCellPos(m,nv);r1=Math.min(r1,p.r);r2=Math.max(r2,p.r);c1=Math.min(c1,p.c);c2=Math.max(c2,p.c)});
+    const left=(1+c1)*68,top=(1+r1)*68,w=(c2-c1+1)*64+(c2-c1)*4,h=(r2-r1+1)*64+(r2-r1)*4;
+    overlays+=`<div class="kgroup" id="${uid}g${gi}" style="--g:${color};left:${left-6}px;top:${top-6}px;width:${w+12}px;height:${h+12}px"><span class="glabel">${grp.t}</span></div>`;
+    legend+=`<div class="klegend-item" id="${uid}l${gi}"><span class="klegend-swatch" style="--g:${color}"></span>Group ${gi+1}: {${grp.c.map(x=>'m'+x).join(', ')}} → <code>${grp.t}</code></div>`;
+    steps+=`<div class="kstep" id="${uid}s${gi}"><b>Step ${gi+1}:</b> ${grp.c.length>1?`Cells {${grp.c.map(x=>'m'+x).join(', ')}} are adjacent on the map, so they combine (the variable that changes between them drops out), leaving`:`Cell {m${grp.c[0]}} has no adjacent 1, so it remains its own group, giving`} the term <b>${grp.t}</b>.</div>`;
+  });
+  const gridW=(cols+1)*64+cols*4,gridH=(rows+1)*64+rows*4;
+  return `<div class="kmap-block" data-kuid="${uid}">
+    <h4>${title}</h4>
+    <p class="kmap-sub">Variables: ${kd.vars.join(', ')} &nbsp;·&nbsp; 1s at {${kd.m.map(x=>'m'+x).join(', ')}}</p>
+    <div class="kmap-flex">
+      <div class="kmap-gridwrap" style="width:${gridW}px;height:${gridH}px">
+        <div class="kmap-gridcss" style="grid-template-columns:repeat(${cols+1},64px)">${cellsHTML}</div>
+        ${overlays}
+      </div>
+      <div class="kmap-legend">${legend}</div>
+    </div>
+    <div class="kmap-steps">${steps}</div>
+    <div class="kctrls">
+      <button class="kbtn primary" onclick="kmNext('${uid}',${kd.groups.length})">▶ Reveal Next Group</button>
+      <button class="kbtn" onclick="kmReset('${uid}',${kd.groups.length})">↺ Reset</button>
+    </div>
+    <div class="kfinal" id="${uid}final"><b>Final simplified expression:</b> ${kd.final}</div>
+  </div>`;
+}
+const KSTATE={};
+function kmNext(uid,total){
+  let s=KSTATE[uid]||0;
+  if(s<total){
+    document.getElementById(uid+'g'+s).classList.add('show');
+    document.getElementById(uid+'l'+s).classList.add('show');
+    document.getElementById(uid+'s'+s).classList.add('show');
+    s++;KSTATE[uid]=s;
+  }
+  if(s>=total)document.getElementById(uid+'final').classList.add('show');
+}
+function kmReset(uid,total){
+  KSTATE[uid]=0;
+  for(let i=0;i<total;i++){
+    document.getElementById(uid+'g'+i).classList.remove('show');
+    document.getElementById(uid+'l'+i).classList.remove('show');
+    document.getElementById(uid+'s'+i).classList.remove('show');
+  }
+  document.getElementById(uid+'final').classList.remove('show');
+}
+function kmapSection(c){
+  const uidBase=c.id+'_km';
+  if(KM[c.id]){
+    let body='',i=0;
+    c.o.forEach(outName=>{
+      const kd=KM[c.id][outName];
+      if(kd){body+=kmapHTML(kd,`K-map for ${outName}`,uidBase+(i++));}
+    });
+    return `<div class="card"><h3 class="title" style="font-size:18px">🗺️ K-Map Simplification</h3><p style="color:var(--text-muted);font-size:14px;margin:4px 0 14px">Plot each output's 1s from the truth table above, group adjacent 1s in powers of two (1, 2, 4…), then read off the simplified SOP term for every group. Click through each output's map step by step below.</p>${body}</div>`;
+  }
+  if(KM2[c.id]){
+    let body='';
+    KM2[c.id].forEach((stage,i)=>{
+      body+=`<p style="font-size:11.5px;color:var(--text-faint);margin:${i?'22px':'2px'} 0 4px;font-family:var(--font-mono);letter-spacing:.05em;text-transform:uppercase">${stage.desc}</p>${kmapHTML(stage.km,stage.label,uidBase+i)}`;
+    });
+    const kind=c.id==='fa2'?'Adders':'Subtractors';
+    return `<div class="card"><h3 class="title" style="font-size:18px">🗺️ K-Map Simplification (via component Half ${kind})</h3><p style="color:var(--text-muted);font-size:14px;margin:4px 0 14px">This circuit is built from two smaller blocks. Each block is only 2 variables wide, so it already has its own tiny, fully-simplified K-map — no need to build one giant 3-variable map from scratch. Step through all five maps below, in build order.</p>${body}</div>`;
+  }
+  return '';
+}
+function panel(c,n){let x=X[c.id];return `<section id="${c.id}" class="panel ${n?'':'active'}"><div class="card"><h2 class="title">${c.n}</h2><div class="learn"><div class="box"><h4>💡 What is it?</h4><p>${x[0]}</p></div><div class="box"><h4>⚙️ How does it work?</h4><p>${x[1]}</p></div><div class="box"><h4>🌍 Real-Time Application</h4><p>${x[2]}</p></div><div class="box"><h4>🧠 Learning Point</h4><p>${x[3]}</p></div></div><h3 class="title" style="font-size:16px;margin-top:22px">🎛 Live Simulator</h3><div class="io">${c.i.map((q,k)=>`<div class="io-group"><b>${q}</b><button id="${c.id}b${k}" class="sw" onclick="flip('${c.id}',${k})">0</button></div>`).join('')}${c.o.map((q,k)=>`<div class="out" id="${c.id}out${k}">${q}: <span id="${c.id}v${k}">0</span></div>`).join('')}</div></div><div class="card"><h3 class="title" style="font-size:18px">🔌 Animated Logic Diagram</h3><div class="diagram">${diag(c)}</div><div class="note"><b>Signal Flow:</b> ${x[4]} Glowing wires with a traveling pulse represent logic HIGH (1).</div></div><div class="card"><h3 class="title" style="font-size:18px">📋 Truth Table</h3><p style="color:var(--text-muted);font-size:14px;margin-top:6px">The active input combination is highlighted automatically.</p><table><tr>${[...c.i,...c.o].map(q=>`<th>${q}</th>`).join('')}</tr>${rows(c)}</table></div>${kmapSection(c)}<div class="card"><h3 class="title" style="font-size:18px">🧠 Boolean Expression &amp; Simplification</h3>${c.e.map(q=>`<div class="formula">${q}</div>`).join('')}<div class="note">XOR is HIGH when inputs differ. AND is HIGH when all required inputs are HIGH. OR combines Carry/Borrow conditions. NOT complements a signal.</div></div></section>`}
 tabs.innerHTML=C.map((c,n)=>`<button class="${n?'':'active'}" onclick="show('${c.id}',this)"><span class="glyph">${ICON[c.id]}</span>${c.n}</button>`).join('');app.innerHTML=C.map(panel).join('');
 function show(id,b){document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
 function g(id){return C.find(x=>x.id===id)}
