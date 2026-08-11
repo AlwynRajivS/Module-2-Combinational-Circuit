@@ -110,6 +110,20 @@ a{color:var(--enc)}
 .role-pill.e{background:var(--enc-soft);color:var(--enc)}
 .role-pill.d{background:var(--dec-soft);color:var(--dec)}
 
+/* ---------- per-analogy interactive stage ---------- */
+.stage-card{border-style:dashed;border-color:var(--line-strong)}
+.stage-card h3{display:flex;align-items:center;gap:8px}
+.stage-card .stage-hint{color:var(--muted);font-size:.85rem;margin:2px 0 4px}
+.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.stage-item{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;font-size:.78rem;font-weight:600;transition:.15s;color:var(--ink)}
+.stage-item .si-icon{font-size:1.35rem;display:block;margin-bottom:3px}
+.stage-item:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.stage-item.active.enc{border-color:var(--enc);background:var(--enc-soft);transform:scale(1.05)}
+.stage-item.active.dec{border-color:var(--dec);background:var(--dec-soft);transform:scale(1.05)}
+.stage-rotary-btns{display:flex;justify-content:center;gap:12px;margin:16px 0 6px}
+@media(max-width:700px){.stage-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.stage-grid{grid-template-columns:repeat(2,1fr)}}
+
 /* ---------- flow / trace connectors ---------- */
 .flow{display:grid;grid-template-columns:1fr 64px 1.15fr 64px 1fr;align-items:center;gap:6px;margin:20px 0}
 .node{border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:16px;text-align:center}
@@ -282,15 +296,20 @@ footer{text-align:center;color:var(--muted);padding:34px 0 20px;font-size:.82rem
    <div class="card analogy-card" data-a="priority"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🚨</div><strong>Priority Encoder</strong><span class="muted">Emergency queue → priority number</span></div>
    <div class="card analogy-card" data-a="rotary"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🎚️</div><strong>Rotary Encoder</strong><span class="muted">Knob movement → position code</span></div>
    <div class="card analogy-card" data-a="keyboard"><span class="role-pill e">ENCODER</span><div class="analogy-icon">⌨️</div><strong>Keyboard Encoder</strong><span class="muted">Key press → character code</span></div>
+   <div class="card analogy-card" data-a="barcode"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🛒</div><strong>Barcode Scanner</strong><span class="muted">Scanned stripes → product SKU</span></div>
+   <div class="card analogy-card" data-a="fingerprint"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🖐️</div><strong>Biometric Scanner</strong><span class="muted">Fingerprint pattern → identity code</span></div>
    <div class="card analogy-card d" data-a="basicDecoder"><span class="role-pill d">DECODER</span><div class="analogy-icon">🏨</div><strong>Basic Decoder</strong><span class="muted">Room number → room door</span></div>
    <div class="card analogy-card d" data-a="memory"><span class="role-pill d">DECODER</span><div class="analogy-icon">📬</div><strong>Memory Decoder</strong><span class="muted">House address → correct house</span></div>
    <div class="card analogy-card d" data-a="display"><span class="role-pill d">DECODER</span><div class="analogy-icon">🔢</div><strong>7-Segment Decoder</strong><span class="muted">Digit code → display shape</span></div>
    <div class="card analogy-card d" data-a="chip"><span class="role-pill d">DECODER</span><div class="analogy-icon">🏫</div><strong>Chip Select</strong><span class="muted">School address → one classroom</span></div>
    <div class="card analogy-card d" data-a="demux"><span class="role-pill d">DECODER</span><div class="analogy-icon">🚦</div><strong>Output Selection</strong><span class="muted">Traffic controller → one road</span></div>
+   <div class="card analogy-card d" data-a="vending"><span class="role-pill d">DECODER</span><div class="analogy-icon">🥤</div><strong>Vending Machine</strong><span class="muted">Code "B4" → one snack slot</span></div>
+   <div class="card analogy-card d" data-a="remote"><span class="role-pill d">DECODER</span><div class="analogy-icon">📺</div><strong>TV Remote Tuner</strong><span class="muted">Channel number → one channel</span></div>
   </div>
   <div class="callout" id="analogyText" aria-live="polite">
    <b>Basic Encoder — Apartment analogy:</b> A building has four rooms. Instead of sending four separate signals, the system gives the selected room a compact number: Room 3 → <b>11</b>. The Encoder performs this conversion: <b>selected input → binary code</b>.
   </div>
+  <div class="card stage-card" id="analogyStage" style="margin-top:14px"></div>
  </div>
 
  <div class="grid2" style="margin-top:18px">
@@ -616,17 +635,193 @@ const analogy={
  priority:{cls:"", html:"<b>Priority Encoder — Hospital emergency desk:</b> Several patients may request attention, but the most critical patient is handled first. Digital idea: <b>many active requests → highest-priority input → binary identity</b>."},
  rotary:{cls:"", html:"<b>Rotary Encoder — Volume knob:</b> Rotating the knob creates digital pulses that tell the controller how far and in which direction it moved. Digital idea: <b>mechanical motion → digital information</b>."},
  keyboard:{cls:"", html:"<b>Keyboard Encoder — Receptionist:</b> You press one key; the system identifies that key and represents it with a code. Digital idea: <b>key selection → code</b>."},
+ barcode:{cls:"", html:"<b>Barcode Scanner — Grocery checkout:</b> Thousands of possible products sit on the shelves, but the scanner only needs to recognise the one pattern of stripes under its laser and turn it into a short SKU number the till understands. Digital idea: <b>one selected pattern → compact product code</b> — the same job a receptionist does, just reading stripes instead of faces."},
+ fingerprint:{cls:"", html:"<b>Biometric Scanner — Airport security:</b> Out of millions of possible fingerprints, the scanner reads the one ridge pattern placed on it and converts it into a unique digital identity code the computer can match. Digital idea: <b>one physical pattern, selected by contact → a short identifying code</b>, exactly like an encoder compressing “which input is active” into a few bits."},
  basicDecoder:{cls:"d", html:"<b>Basic Decoder — Hotel reception:</b> A guest gives room number 11. The receptionist identifies Room 3 and directs the guest there. Digital idea: <b>binary code → one selected output</b>."},
  memory:{cls:"d", html:"<b>Memory Decoder — Postal service:</b> A postal worker reads an address and finds one house among thousands. Digital idea: <b>address bits → decoder → selected memory location/chip</b>."},
  display:{cls:"d", html:"<b>7-Segment Decoder — Drawing a digit:</b> If someone asks an artist to draw “5”, only the required strokes are drawn. Digital idea: <b>digit code → required LED segments ON</b>."},
  chip:{cls:"d", html:"<b>Chip Select — School classroom:</b> The office receives a classroom number and sends the announcement only to that room. Digital idea: <b>address/control code → one chip-select line</b>."},
- demux:{cls:"d", html:"<b>Output Selection — Traffic signal:</b> A controller chooses one road while other roads wait. Digital idea: <b>control information → selected path</b>."}
+ demux:{cls:"d", html:"<b>Output Selection — Traffic signal:</b> A controller chooses one road while other roads wait. Digital idea: <b>control information → selected path</b>."},
+ vending:{cls:"d", html:"<b>Vending Machine — Snack code:</b> You key in “B4.” Out of forty possible slots, the machine's logic reads those two characters and drives the motor for exactly one coil — no other slot even twitches. Digital idea: <b>a short code → one selected output among many</b>, the same “few bits, one winner” pattern as any decoder."},
+ remote:{cls:"d", html:"<b>TV Remote Tuner — Changing channels:</b> You type “07.” Among hundreds of channels the tuner could show, the decoder inside reads that number and switches the display to exactly one broadcast — every other channel stays off-screen. Digital idea: <b>binary channel code → one active output line</b>, just like a decoder opening one door out of many."}
 };
 $$(".analogy-card").forEach(c=>c.addEventListener("click",()=>{
  $$(".analogy-card").forEach(x=>x.classList.remove("selected"));c.classList.add("selected");
  const a=analogy[c.dataset.a];
  const box=$("#analogyText"); box.className="callout "+a.cls; box.innerHTML=a.html;
+ renderStage(c.dataset.a);
 }));
+
+/* ---------- interactive analogy stage engine ---------- */
+const genItems=(n,icon,prefix)=>Array.from({length:n},(_,i)=>({icon,label:prefix+" "+i}));
+const widthFor=n=>Math.max(1,Math.round(Math.log2(n)));
+
+const stageConfig={
+ basicEncoder:{kind:"A",title:"Pick a room",items:genItems(4,"🚪","Room"),prompt:"Selected:",
+  explain:(it,code)=>`The receptionist writes <b>${code}</b> for <b>${it.label}</b> — a short tag standing in for the whole room.`},
+ keyboard:{kind:"A",title:"Press a key",items:[{icon:"⌨️",label:"Key A"},{icon:"⌨️",label:"Key S"},{icon:"⌨️",label:"Key D"},{icon:"⌨️",label:"Key F"}],prompt:"Pressed:",
+  explain:(it,code)=>`Pressing <b>${it.label}</b> sends the code <b>${code}</b> to the processor — the whole keyboard collapses to one small tag.`},
+ barcode:{kind:"A",title:"Scan a product",items:[{icon:"🥫",label:"Soup Can"},{icon:"🍞",label:"Bread"},{icon:"🧃",label:"Juice Box"},{icon:"🧴",label:"Shampoo"}],prompt:"Scanned:",
+  explain:(it,code)=>`The scanner reads the stripes on <b>${it.label}</b> and hands the till the SKU code <b>${code}</b>.`},
+ fingerprint:{kind:"A",title:"Scan a fingerprint",items:[{icon:"🧑",label:"Traveler A"},{icon:"🧑‍🦱",label:"Traveler B"},{icon:"🧔",label:"Traveler C"},{icon:"👩",label:"Traveler D"}],prompt:"Scanned:",
+  explain:(it,code)=>`The one ridge pattern placed on the sensor becomes the identity code <b>${code}</b> for <b>${it.label}</b>.`},
+ basicDecoder:{kind:"B",title:"Send a room code",items:genItems(4,"🚪","Door"),
+  explain:(code,it)=>`Guest presents <b>${code}</b> — the guard opens <b>${it.label}</b> only.`},
+ memory:{kind:"B",title:"Send an address",items:genItems(8,"🏠","House"),
+  explain:(code,it)=>`Address <b>${code}</b> lights up exactly <b>${it.label}</b> on the bus — every other house ignores it.`},
+ chip:{kind:"B",title:"Send a classroom code",items:genItems(4,"🏫","Room"),
+  explain:(code,it)=>`Control code <b>${code}</b> selects <b>${it.label}</b> — only that classroom hears the announcement.`},
+ demux:{kind:"B",title:"Send a route code",items:genItems(4,"🛣️","Road"),
+  explain:(code,it)=>`Code <b>${code}</b> opens <b>${it.label}</b> — the rest stay closed.`},
+ vending:{kind:"B",title:"Key in a snack code",items:genItems(8,"🍫","Slot"),
+  explain:(code,it)=>`Keypad code <b>${code}</b> drives the motor for <b>${it.label}</b> only.`},
+ remote:{kind:"B",title:"Type a channel number",items:genItems(8,"📡","Channel"),
+  explain:(code,it)=>`Typing <b>${code}</b> tunes the display to <b>${it.label}</b> — every other channel stays off-screen.`},
+ priority:{kind:"PRIORITY",title:"Trigger emergencies"},
+ rotary:{kind:"ROTARY",title:"Turn the knob"},
+ display:{kind:"DISPLAY",title:"Choose a digit"}
+};
+
+const stageEl=$("#analogyStage");
+let stageState={};
+
+function shell(title,hint,body){
+ stageEl.innerHTML=`<h3>🎮 Try it — ${title}</h3><p class="stage-hint">${hint}</p>${body}`;
+}
+
+function renderStage(key){
+ const cfg=stageConfig[key];
+ if(cfg.kind==="A") return renderStageA(cfg);
+ if(cfg.kind==="B") return renderStageB(cfg);
+ if(cfg.kind==="PRIORITY") return renderStagePriority();
+ if(cfg.kind==="ROTARY") return renderStageRotary();
+ if(cfg.kind==="DISPLAY") return renderStageDisplay();
+}
+
+function renderStageA(cfg){
+ const width=widthFor(cfg.items.length);
+ stageState={cfg,width,selected:null};
+ const items=cfg.items.map((it,i)=>`<button class="stage-item" data-role="a-item" data-idx="${i}"><span class="si-icon">${it.icon}</span>${it.label}</button>`).join("");
+ shell(cfg.title,"Tap one option — watch the compact code it produces.",
+  `<div class="stage-grid">${items}</div>
+   <div class="result"><b>${cfg.prompt}</b> <span id="stageOut">—</span><br><span class="bits" id="stageBits">${"0".repeat(width)}</span></div>
+   <div class="callout" id="stageExplain">Nothing selected yet.</div>`);
+}
+function handleStageA(idx){
+ const {cfg,width}=stageState; stageState.selected=idx;
+ $$("#analogyStage [data-role='a-item']").forEach((b,i)=>{
+  b.classList.add("enc");
+  b.classList.toggle("active",i===idx);
+ });
+ const it=cfg.items[idx], code=idx.toString(2).padStart(width,"0");
+ $("#stageOut").textContent=it.label; $("#stageBits").textContent=code;
+ $("#stageExplain").innerHTML=cfg.explain(it,code);
+}
+
+function renderStageB(cfg){
+ const width=widthFor(cfg.items.length);
+ stageState={cfg,width,bits:Array(width).fill(0)};
+ let bitBtns=""; for(let i=0;i<width;i++) bitBtns+=`<button class="bitbtn" data-role="b-bit" data-idx="${i}">0</button>`;
+ const items=cfg.items.map((it,i)=>`<div class="stage-item" id="stageItem${i}"><span class="si-icon">${it.icon}</span>${it.label}</div>`).join("");
+ shell(cfg.title,"Flip the bits — exactly one output should ever light up.",
+  `<div class="switches">${bitBtns}</div>
+   <div style="text-align:center"><span class="bits" id="stageBitsVal">${"0".repeat(width)}</span></div>
+   <div class="stage-grid">${items}</div>
+   <div class="callout d" id="stageExplain">Code ${"0".repeat(width)} selects ${cfg.items[0].label}.</div>`);
+ updateStageB();
+}
+function handleStageB(idx){
+ stageState.bits[idx]^=1;
+ updateStageB();
+}
+function updateStageB(){
+ const {cfg,width,bits}=stageState;
+ $$("#analogyStage [data-role='b-bit']").forEach((b,i)=>{b.textContent=bits[i];b.classList.toggle("on",!!bits[i]);});
+ const code=bits.join(""); const value=parseInt(code,2);
+ $("#stageBitsVal").textContent=code;
+ cfg.items.forEach((it,i)=>{const el=$("#stageItem"+i); if(el) el.classList.toggle("active",i===value); if(el) el.classList.add("dec");});
+ $("#stageExplain").innerHTML=cfg.explain(code,cfg.items[value]);
+}
+
+function renderStagePriority(){
+ const labels=[{i:3,l:"P3 — Critical",p:"highest"},{i:2,l:"P2 — Urgent",p:""},{i:1,l:"P1 — Routine",p:""},{i:0,l:"P0 — Minor",p:"lowest"}];
+ stageState={req:[false,false,false,false]};
+ const rows=labels.map(r=>`<div class="reqline" data-line="${r.i}"><span class="label">${r.l}</span><button class="swtoggle" data-role="p-toggle" data-idx="${r.i}"></button><span class="prio">${r.p}</span></div>`).join("");
+ shell("Trigger emergencies","Switch on several requests at once — the encoder always reports the highest-priority one.",
+  `<div class="reqrow">${rows}</div>
+   <div class="result" id="stageExplain"><b>No request active.</b><br>Output stays idle.</div>`);
+}
+function handleStagePriority(idx){
+ stageState.req[idx]=!stageState.req[idx];
+ $(`#analogyStage [data-role='p-toggle'][data-idx='${idx}']`).classList.toggle("on",stageState.req[idx]);
+ $$("#analogyStage .reqline").forEach(l=>l.classList.remove("winner"));
+ let winner=-1; for(let i=3;i>=0;i--) if(stageState.req[i]){winner=i;break;}
+ if(winner===-1){ $("#stageExplain").innerHTML="<b>No request active.</b><br>Output stays idle."; }
+ else{
+  const code=winner.toString(2).padStart(2,"0");
+  $(`#analogyStage .reqline[data-line='${winner}']`).classList.add("winner");
+  $("#stageExplain").innerHTML=`<b>P${winner} wins priority.</b><br><span class="bits">${code}</span> — lower-priority requests are ignored this cycle.`;
+ }
+}
+
+function renderStageRotary(){
+ stageState={pos:0};
+ shell("Turn the knob","Rotate clockwise or counter-clockwise — each click is one pulse the controller counts.",
+  `<div class="stage-rotary-btns">
+    <button class="btn ghost" data-role="rot" data-dir="-1">◀ Rotate CCW</button>
+    <button class="btn ghost" data-role="rot" data-dir="1">Rotate CW ▶</button>
+   </div>
+   <div class="result" style="text-align:center"><b>Position:</b> <span id="stageRotPos">0</span> pulses<br><span class="bits" id="stageRotBits">0000</span></div>
+   <div class="callout" id="stageExplain">Turn the knob to generate pulses — the controller reads position, not an absolute code.</div>`);
+}
+function handleStageRotary(dir){
+ stageState.pos=(stageState.pos+dir+16)%16;
+ const bits=stageState.pos.toString(2).padStart(4,"0");
+ $("#stageRotPos").textContent=stageState.pos; $("#stageRotBits").textContent=bits;
+ $("#stageExplain").innerHTML=`Turning <b>${dir>0?"clockwise":"counter-clockwise"}</b> added a pulse. Controller now reads position <b>${bits}</b> (${stageState.pos}).`;
+}
+
+const segMapMini={0:"abcdef",1:"bc",2:"abged",3:"abgcd",4:"fgbc",5:"afgcd",6:"afgedc",7:"abc",8:"abcdefg",9:"abcdfg"};
+function renderStageDisplay(){
+ stageState={digit:5};
+ let picker=""; for(let d=0;d<10;d++) picker+=`<button class="digitbtn" data-role="digit" data-d="${d}">${d}</button>`;
+ shell("Choose a digit","Ask for a digit — only the strokes that digit needs are switched on.",
+  `<div class="digitpicker">${picker}</div>
+   <div class="sevseg-wrap" style="margin-top:12px">
+    <svg viewBox="0 0 120 200" id="stageSevSvg">
+     <rect class="seg" data-seg="a" x="28" y="6" width="64" height="12" rx="4"/>
+     <rect class="seg" data-seg="f" x="16" y="16" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="b" x="92" y="16" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="g" x="28" y="94" width="64" height="12" rx="4"/>
+     <rect class="seg" data-seg="e" x="16" y="104" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="c" x="92" y="104" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="d" x="28" y="182" width="64" height="12" rx="4"/>
+    </svg>
+    <div class="callout d" id="stageExplain" style="max-width:180px">Pick a digit.</div>
+   </div>`);
+ setStageDigit(5);
+}
+function handleStageDisplay(d){ setStageDigit(d); }
+function setStageDigit(d){
+ stageState.digit=d;
+ $$("#analogyStage [data-role='digit']").forEach(b=>b.classList.toggle("active",+b.dataset.d===d));
+ const on=segMapMini[d];
+ $$("#stageSevSvg .seg").forEach(s=>s.classList.toggle("on",on.includes(s.dataset.seg)));
+ $("#stageExplain").innerHTML=`BCD code <b>${d.toString(2).padStart(4,"0")}</b> → only the strokes for <b>${d}</b> light up.`;
+}
+
+/* single delegated listener drives every stage type */
+stageEl.addEventListener("click",e=>{
+ const t=e.target.closest("[data-role]"); if(!t) return;
+ const role=t.dataset.role;
+ if(role==="a-item") handleStageA(+t.dataset.idx);
+ else if(role==="b-bit") handleStageB(+t.dataset.idx);
+ else if(role==="p-toggle") handleStagePriority(+t.dataset.idx);
+ else if(role==="rot") handleStageRotary(+t.dataset.dir);
+ else if(role==="digit") handleStageDisplay(+t.dataset.d);
+});
+
+renderStage("basicEncoder");
 
 /* ---------- 4-to-2 encoder ---------- */
 $$(".choice").forEach(btn=>btn.addEventListener("click",()=>{
