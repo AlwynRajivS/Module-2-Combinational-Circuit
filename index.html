@@ -2,1952 +2,636 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Module 2 — Combinational Circuits | Digital Logic Lab</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
 
-/* =========================================================
-   ROOT VARIABLES
-========================================================= */
-
-:root{
-  --radius-lg:22px;
-  --radius-md:14px;
-  --radius-sm:9px;
-
-  --font-display:'Space Grotesk',Inter,sans-serif;
-  --font-body:'Inter',Arial,sans-serif;
-  --font-mono:'JetBrains Mono',Consolas,monospace;
-
-  --ease:cubic-bezier(.4,0,.2,1);
-}
-
-
-/* =========================================================
-   DARK THEME
-========================================================= */
-
-[data-theme="dark"]{
-  --bg:#090d15;
-  --bg-grid-line:#141d2f;
-
-  --surface:#111827;
-  --surface-2:#161f33;
-  --surface-hover:#1b2540;
-
-  --border:#233149;
-  --border-soft:#1a2438;
-
-  --text:#e9edf7;
-  --text-muted:#8996b3;
-  --text-faint:#5a6683;
-
-  --ink:#dfe6f5;
-  --gate-fill:#161f33;
-  --wire-off:#374560;
-
-  --accent:#ffb347;
-  --accent-strong:#ffd08a;
-  --accent-ink:#1a1206;
-
-  --amber:#f59e0b;
-
-  --brand-a:#7c6cf0;
-  --brand-b:#34d3c9;
-  --brand-c:#ff8fb1;
-
-  --track:#1a2438;
-
-  --shadow:0 20px 45px -18px rgba(0,0,0,.65);
-  --shadow-sm:0 8px 20px -10px rgba(0,0,0,.55);
-
-  --ready-bg:#12331f;
-  --ready-text:#5fe08c;
-  --ready-border:#1e5636;
-
-  --soon-bg:#241c33;
-  --soon-text:#b9a6ff;
-  --soon-border:#372a52;
-
-  color-scheme:dark;
-}
-
-
-/* =========================================================
-   LIGHT THEME
-========================================================= */
-
-[data-theme="light"]{
-  --bg:#eef3fa;
-  --bg-grid-line:#dbe5f2;
-
-  --surface:#ffffff;
-  --surface-2:#f4f8fd;
-  --surface-hover:#e9f0fa;
-
-  --border:#d9e2f0;
-  --border-soft:#e6ecf6;
-
-  --text:#152036;
-  --text-muted:#5c6a87;
-  --text-faint:#8695b3;
-
-  --ink:#16233d;
-  --gate-fill:#ffffff;
-
-  --wire-off:#aab8ce;
-
-  --accent:#e8890c;
-  --accent-strong:#ffb347;
-  --accent-ink:#241500;
-
-  --amber:#d97706;
-
-  --brand-a:#4338ca;
-  --brand-b:#0891b2;
-  --brand-c:#c0388a;
-
-  --track:#e7edf7;
-
-  --shadow:0 20px 45px -20px rgba(30,50,90,.22);
-  --shadow-sm:0 8px 20px -12px rgba(30,50,90,.18);
-
-  --ready-bg:#e4f8ea;
-  --ready-text:#178a4c;
-  --ready-border:#bfe9cd;
-
-  --soon-bg:#f1edff;
-  --soon-text:#6d49c7;
-  --soon-border:#ded2ff;
-
-  color-scheme:light;
-}
-
-
-/* =========================================================
-   GLOBAL
-========================================================= */
-
-*{
-  box-sizing:border-box;
-}
-
-html{
-  scroll-behavior:smooth;
-}
-
-body{
-  margin:0;
-  font-family:var(--font-body);
-  color:var(--text);
-  background:var(--bg);
-
-  background-image:
-    linear-gradient(
-      var(--bg-grid-line) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      var(--bg-grid-line) 1px,
-      transparent 1px
-    );
-
-  background-size:42px 42px;
-  background-position:center top;
-
-  min-height:100vh;
-
-  transition:
-    background-color .4s var(--ease),
-    color .4s var(--ease);
-}
-
-::selection{
-  background:var(--accent);
-  color:var(--accent-ink);
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-header{
-  position:relative;
-  overflow:hidden;
-
-  padding:46px 20px 34px;
-
-  color:#fff;
-
-  background:
-    linear-gradient(
-      125deg,
-      var(--brand-a),
-      var(--brand-c) 55%,
-      var(--brand-b)
-    );
-
-  background-size:220% 220%;
-
-  animation:bgshift 12s ease infinite;
-}
-
-@keyframes bgshift{
-  0%,100%{
-    background-position:0% 40%;
+  :root{
+    --bg:#060a08;
+    --bg-panel:#0d1512;
+    --bg-card:#0f1a15;
+    --copper:#d7a656;
+    --copper-dim:#8a6c3a;
+    --signal:#4ade80;
+    --signal-dim:rgba(74,222,128,.15);
+    --amber:#f5a623;
+    --amber-dim:rgba(245,166,35,.15);
+    --text:#e7ede9;
+    --text-muted:#7c8b82;
+    --border:rgba(215,166,86,.16);
+    --grid-line:rgba(74,222,128,.05);
+    --term-bg:#03110a;
+    --term-text:#6cf5a3;
+    --danger:#f87171;
   }
 
-  50%{
-    background-position:100% 60%;
-  }
-}
-
-
-/* =========================================================
-   HEADER ORBS
-========================================================= */
-
-header .orb{
-  position:absolute;
-  border-radius:50%;
-  background:#ffffff26;
-  filter:blur(2px);
-  pointer-events:none;
-}
-
-header .orb.o1{
-  width:300px;
-  height:300px;
-  right:-100px;
-  top:-150px;
-
-  animation:float1 9s ease-in-out infinite;
-}
-
-header .orb.o2{
-  width:180px;
-  height:180px;
-  left:-70px;
-  bottom:-100px;
-
-  animation:float2 11s ease-in-out infinite;
-}
-
-@keyframes float1{
-  50%{
-    transform:
-      translate(-40px,40px)
-      scale(1.12);
-  }
-}
-
-@keyframes float2{
-  50%{
-    transform:
-      translate(30px,-25px)
-      scale(1.08);
-  }
-}
-
-
-/* =========================================================
-   CIRCUIT BACKGROUND
-========================================================= */
-
-header svg.circuit{
-  position:absolute;
-  inset:0;
-
-  width:100%;
-  height:100%;
-
-  opacity:.2;
-  pointer-events:none;
-}
-
-header svg.circuit path{
-  stroke:#fff;
-  stroke-width:1.4;
-  fill:none;
-
-  stroke-dasharray:6 10;
-
-  animation:travel 6s linear infinite;
-}
-
-header svg.circuit circle{
-  fill:#fff;
-
-  animation:blink 2.6s ease-in-out infinite;
-}
-
-@keyframes travel{
-  to{
-    stroke-dashoffset:-160;
-  }
-}
-
-@keyframes blink{
-  0%,100%{
-    opacity:.25;
+  [data-theme="light"]{
+    --bg:#eef2f0;
+    --bg-panel:#e3ebe6;
+    --bg-card:#ffffff;
+    --copper:#a8722f;
+    --copper-dim:#d9b88a;
+    --signal:#0f7a3d;
+    --signal-dim:rgba(15,122,61,.1);
+    --amber:#a06a13;
+    --amber-dim:rgba(160,106,19,.1);
+    --text:#152420;
+    --text-muted:#5b6b64;
+    --border:rgba(21,36,32,.13);
+    --grid-line:rgba(21,36,32,.06);
   }
 
-  50%{
-    opacity:1;
-  }
-}
-
-
-/* =========================================================
-   HEADER CONTENT
-========================================================= */
-
-.header-inner{
-  position:relative;
-
-  max-width:1180px;
-  margin:0 auto;
-
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-
-  gap:16px;
-
-  flex-wrap:wrap;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.brand-mark{
-  width:54px;
-  height:54px;
-
-  border-radius:15px;
-
-  background:#ffffff22;
-
-  border:1px solid #ffffff40;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:25px;
-
-  backdrop-filter:blur(6px);
-
-  box-shadow:0 0 24px #ffffff30;
-
-  flex:none;
-}
-
-.eyebrow{
-  margin:0 0 4px;
-
-  font:
-    600 11px/1
-    var(--font-mono);
-
-  letter-spacing:.14em;
-
-  text-transform:uppercase;
-
-  opacity:.88;
-}
-
-header h1{
-  margin:0;
-
-  font:
-    700 clamp(26px,4.4vw,40px)/1.15
-    var(--font-display);
-
-  letter-spacing:-.01em;
-}
-
-.tagline{
-  position:relative;
-
-  max-width:800px;
-
-  margin:18px auto 0;
-
-  line-height:1.7;
-
-  opacity:.92;
-
-  font-size:15.5px;
-}
-
-
-/* =========================================================
-   THEME BUTTON
-========================================================= */
-
-.theme-toggle{
-  display:flex;
-  align-items:center;
-
-  gap:8px;
-
-  border:1px solid #ffffff40;
-
-  background:#ffffff1c;
-
-  color:#fff;
-
-  padding:9px 16px 9px 12px;
-
-  border-radius:999px;
-
-  cursor:pointer;
-
-  font:
-    600 13px/1
-    var(--font-body);
-
-  backdrop-filter:blur(6px);
-
-  transition:.25s var(--ease);
-}
-
-.theme-toggle:hover{
-  background:#ffffff30;
-
-  transform:translateY(-1px);
-}
-
-.theme-toggle .ic{
-  font-size:16px;
-
-  transition:
-    transform .4s
-    var(--ease);
-}
-
-.theme-toggle:active .ic{
-  transform:rotate(25deg);
-}
-
-
-/* =========================================================
-   STAT ROW
-========================================================= */
-
-.stat-row{
-  position:relative;
-
-  max-width:1180px;
-
-  margin:26px auto 0;
-
-  display:flex;
-
-  gap:10px;
-
-  flex-wrap:wrap;
-}
-
-.stat{
-  padding:9px 14px;
-
-  border-radius:999px;
-
-  background:#ffffff1c;
-
-  border:1px solid #ffffff35;
-
-  font:
-    600 12.5px/1
-    var(--font-mono);
-
-  backdrop-filter:blur(6px);
-}
-
-
-/* =========================================================
-   QUOTE
-========================================================= */
-
-.quote-wrap{
-  max-width:1180px;
-
-  margin:22px auto 0;
-
-  padding:0 20px;
-}
-
-.quote-card{
-  position:relative;
-
-  padding:
-    20px
-    24px
-    20px
-    56px;
-
-  border-radius:
-    var(--radius-md);
-
-  background:
-    var(--surface);
-
-  border:
-    1px solid
-    var(--border);
-
-  box-shadow:
-    var(--shadow-sm);
-
-  min-height:64px;
-
-  display:flex;
-
-  align-items:center;
-
-  overflow:hidden;
-}
-
-.quote-card::before{
-  content:"\201C";
-
-  position:absolute;
-
-  left:14px;
-  top:2px;
-
-  font:
-    700 52px/1
-    var(--font-display);
-
-  color:
-    var(--accent);
-
-  opacity:.55;
-}
-
-.quote-text{
-  font:
-    500 15.5px/1.6
-    var(--font-display);
-
-  color:
-    var(--text);
-
-  opacity:0;
-
-  transform:
-    translateY(8px);
-
-  transition:
-    opacity .5s var(--ease),
-    transform .5s var(--ease);
-}
-
-.quote-text.show{
-  opacity:1;
-
-  transform:none;
-}
-
-.quote-author{
-  display:block;
-
-  margin-top:6px;
-
-  font:
-    600 12px/1
-    var(--font-mono);
-
-  color:
-    var(--text-faint);
-
-  letter-spacing:.03em;
-}
-
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-main{
-  width:100%;
-  max-width:1180px;
-
-  margin:0 auto;
-
-  padding:
-    34px
-    18px
-    60px;
-}
-
-.section-head{
-  display:flex;
-
-  align-items:baseline;
-
-  justify-content:space-between;
-
-  gap:12px;
-
-  flex-wrap:wrap;
-
-  margin-bottom:20px;
-}
-
-.section-head h2{
-  margin:0;
-
-  font:
-    700 clamp(20px,3vw,26px)/1.25
-    var(--font-display);
-
-  letter-spacing:-.01em;
-
-  border-left:
-    5px solid
-    var(--accent);
-
-  padding-left:14px;
-}
-
-.section-sub{
-  margin:0;
-
-  color:
-    var(--text-muted);
-
-  font-size:14px;
-
-  max-width:440px;
-}
-
-
-/* =========================================================
-   TOPIC GRID
-   DESKTOP = EXACTLY 3 COLUMNS
-========================================================= */
-
-.grid{
-  width:100%;
-
-  display:grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap:18px;
-
-  align-items:stretch;
-}
-
-
-/* =========================================================
-   TOPIC CARD
-========================================================= */
-
-.topic-card{
-  --d:0s;
-
-  position:relative;
-
-  display:flex;
-
-  flex-direction:column;
-
-  width:100%;
-
-  height:296px;
-
-  min-width:0;
-
-  text-align:left;
-
-  padding:
-    22px
-    20px
-    20px;
-
-  border-radius:
-    var(--radius-lg);
-
-  background:
-    var(--surface);
-
-  border:
-    1px solid
-    var(--border);
-
-  box-shadow:
-    var(--shadow-sm);
-
-  cursor:pointer;
-
-  overflow:hidden;
-
-  color:inherit;
-
-  text-decoration:none;
-
-  opacity:0;
-
-  transform:
-    translateY(18px);
-
-  transition:
-    transform .3s var(--ease),
-    box-shadow .3s var(--ease),
-    border-color .3s var(--ease);
-}
-
-.topic-card.in-view{
-  animation:
-    cardIn
-    .55s
-    var(--ease)
-    var(--d)
-    both;
-}
-
-@keyframes cardIn{
-
-  from{
-    opacity:0;
-
-    transform:
-      translateY(18px);
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:34px 34px;
+    transition:background-color .5s ease, color .5s ease;
+    overflow-x:hidden;
   }
 
-  to{
-    opacity:1;
+  ::selection{ background:var(--signal-dim); color:var(--text); }
 
-    transform:none;
-  }
+  a{ color:inherit; }
 
-}
-
-.topic-card:hover{
-  transform:
-    translateY(-5px);
-
-  box-shadow:
-    var(--shadow);
-
-  border-color:
-    var(--accent);
-}
-
-.topic-card::after{
-  content:"";
-
-  position:absolute;
-
-  inset:0;
-
-  border-radius:inherit;
-
-  padding:1px;
-
-  pointer-events:none;
-
-  opacity:0;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      transparent 60%
-    );
-
-  -webkit-mask:
-    linear-gradient(#000 0 0)
-    content-box,
-    linear-gradient(#000 0 0);
-
-  -webkit-mask-composite:xor;
-
-  mask-composite:exclude;
-
-  transition:
-    opacity .3s
-    var(--ease);
-}
-
-.topic-card:hover::after{
-  opacity:1;
-}
-
-
-/* =========================================================
-   CARD TOP
-========================================================= */
-
-.topic-top{
-  display:flex;
-
-  align-items:flex-start;
-
-  justify-content:space-between;
-
-  gap:10px;
-
-  flex:none;
-}
-
-.topic-num{
-  font:
-    700 12px/1
-    var(--font-mono);
-
-  color:
-    var(--text-faint);
-
-  letter-spacing:.05em;
-}
-
-
-/* =========================================================
-   TOPIC ICON
-========================================================= */
-
-.topic-icon{
-  width:46px;
-
-  height:46px;
-
-  border-radius:13px;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  font-size:21px;
-
-  background:
-    var(--surface-2);
-
-  border:
-    1px solid
-    var(--border-soft);
-
-  margin-top:10px;
-
-  transition:
-    .3s
-    var(--ease);
-
-  flex:none;
-}
-
-.topic-card:hover .topic-icon{
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent-strong)
-    );
-
-  box-shadow:
-    0 0 20px
-    color-mix(
-      in srgb,
-      var(--accent) 55%,
-      transparent
-    );
-}
-
-
-/* =========================================================
-   CARD TITLE
-========================================================= */
-
-.topic-card h3{
-  margin:
-    14px
-    0
-    6px;
-
-  font:
-    700 16.5px/1.35
-    var(--font-display);
-
-  letter-spacing:
-    -.005em;
-
-  flex:none;
-
-  display:
-    -webkit-box;
-
-  -webkit-line-clamp:2;
-
-  -webkit-box-orient:
-    vertical;
-
-  overflow:hidden;
-
-  min-height:44.6px;
-}
-
-
-/* =========================================================
-   CARD DESCRIPTION
-========================================================= */
-
-.topic-card p{
-  margin:0;
-
-  font-size:13.5px;
-
-  line-height:1.6;
-
-  color:
-    var(--text-muted);
-
-  flex:
-    1 1 auto;
-
-  display:
-    -webkit-box;
-
-  -webkit-line-clamp:3;
-
-  -webkit-box-orient:
-    vertical;
-
-  overflow:hidden;
-}
-
-
-/* =========================================================
-   CARD BOTTOM
-========================================================= */
-
-.card-bottom{
-  display:flex;
-
-  align-items:center;
-
-  justify-content:
-    space-between;
-
-  gap:10px;
-
-  margin-top:14px;
-
-  flex:none;
-}
-
-.status{
-  display:inline-flex;
-
-  align-items:center;
-
-  gap:6px;
-
-  padding:
-    6px
-    11px;
-
-  border-radius:
-    999px;
-
-  font:
-    700 11px/1
-    var(--font-mono);
-
-  letter-spacing:
-    .03em;
-}
-
-.status.ready{
-  background:
-    var(--ready-bg);
-
-  color:
-    var(--ready-text);
-
-  border:
-    1px solid
-    var(--ready-border);
-}
-
-.status.soon{
-  background:
-    var(--soon-bg);
-
-  color:
-    var(--soon-text);
-
-  border:
-    1px solid
-    var(--soon-border);
-}
-
-.status .dot{
-  width:6px;
-
-  height:6px;
-
-  border-radius:50%;
-
-  background:
-    currentColor;
-}
-
-.status.ready .dot{
-  animation:
-    pulseDot
-    1.4s
-    ease-in-out
-    infinite;
-}
-
-@keyframes pulseDot{
-
-  0%,100%{
-    opacity:1;
-  }
-
-  50%{
-    opacity:.35;
-  }
-
-}
-
-.arrow{
-  font-size:16px;
-
-  color:
-    var(--text-faint);
-
-  transition:
-    .3s
-    var(--ease);
-
-  flex:none;
-}
-
-.topic-card:hover .arrow{
-  color:
-    var(--accent);
-
-  transform:
-    translateX(4px);
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-#toast{
-  position:fixed;
-
-  left:50%;
-
-  bottom:26px;
-
-  transform:
-    translate(-50%,20px);
-
-  background:
-    var(--surface);
-
-  border:
-    1px solid
-    var(--border);
-
-  color:
-    var(--text);
-
-  padding:
-    12px
-    20px;
-
-  border-radius:
-    999px;
-
-  box-shadow:
-    var(--shadow);
-
-  font:
-    600 13.5px/1
-    var(--font-body);
-
-  opacity:0;
-
-  pointer-events:none;
-
-  transition:
-    .35s
-    var(--ease);
-
-  z-index:100;
-
-  white-space:nowrap;
-
-  max-width:
-    calc(100vw - 30px);
-}
-
-#toast.show{
-  opacity:1;
-
-  transform:
-    translate(-50%,0);
-}
-
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-footer{
-  max-width:1180px;
-
-  margin:
-    10px
-    auto
-    0;
-
-  padding:
-    24px
-    18px
-    44px;
-
-  text-align:center;
-
-  color:
-    var(--text-faint);
-
-  font-size:13px;
-
-  border-top:
-    1px solid
-    var(--border-soft);
-}
-
-
-/* =========================================================
-   TABLET
-   2 CARDS PER ROW
-========================================================= */
-
-@media(max-width:900px){
-
-  .grid{
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap:14px;
-  }
-
-}
-
-
-/* =========================================================
-   MOBILE
-   1 CARD PER ROW
-========================================================= */
-
-@media(max-width:600px){
-
+  /* ---------- Header ---------- */
   header{
-    padding:
-      30px
-      16px
-      26px;
+    position:relative;
+    padding:56px 40px 60px;
+    overflow:hidden;
+    border-bottom:1px solid var(--border);
   }
 
-  .header-inner{
-    flex-direction:column;
+  .trace-bg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    opacity:.55;
+    pointer-events:none;
+  }
+  .trace-bg path{
+    fill:none;
+    stroke:var(--copper-dim);
+    stroke-width:1.4;
+    stroke-dasharray:4 6;
+  }
+  .trace-bg circle.node{
+    fill:var(--bg);
+    stroke:var(--copper);
+    stroke-width:1.4;
+  }
+  .pulse-dot{
+    fill:var(--signal);
+    filter:drop-shadow(0 0 4px var(--signal));
+  }
+
+  .header-inner{ position:relative; z-index:2; max-width:1200px; margin:0 auto; }
+
+  .header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:56px;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+
+  .brand-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:.06em;
+    color:var(--copper);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-label .led{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--signal);
+    box-shadow:0 0 6px var(--signal);
+    animation:blink 2.4s ease-in-out infinite;
+  }
+
+  /* Binary toggle switch */
+  .theme-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text-muted);
+  }
+  .toggle-track{
+    position:relative;
+    width:60px; height:30px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 8px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .toggle-track span{ z-index:1; opacity:.5; transition:opacity .3s; }
+  .toggle-track span.active{ opacity:1; color:var(--bg); }
+  .toggle-knob{
+    position:absolute;
+    top:3px; left:3px;
+    width:22px; height:22px;
+    border-radius:4px;
+    background:var(--copper);
+    box-shadow:0 0 10px rgba(215,166,86,.5);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  [data-theme="light"] .toggle-knob{ transform:translateX(28px); }
+
+  header h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:58px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.15;
+    margin-bottom:20px;
+    max-width:780px;
+  }
+  header h1 .prompt{ color:var(--copper); font-weight:700; }
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--signal);
+    letter-spacing:.04em;
+    margin-bottom:14px;
+    opacity:.85;
   }
 
   .tagline{
-    font-size:14px;
-  }
-
-  .quote-wrap{
-    padding:0 12px;
-  }
-
-  .quote-card{
-    padding:
-      18px
-      18px
-      18px
-      46px;
-  }
-
-  .quote-card::before{
-    font-size:38px;
-
-    left:10px;
-  }
-
-  main{
-    padding:
-      26px
-      12px
-      50px;
-  }
-
-  .grid{
-    grid-template-columns:1fr;
-
-    gap:12px;
-  }
-
-  .topic-card{
-    height:260px;
-
-    padding:
-      16px
-      14px;
-  }
-
-  .topic-icon{
-    width:42px;
-    height:42px;
-
-    font-size:19px;
-  }
-
-  .topic-card h3{
     font-size:16px;
+    line-height:1.7;
+    color:var(--text-muted);
+    max-width:640px;
+    margin-bottom:40px;
   }
 
-}
+  .stats{ display:flex; gap:12px; flex-wrap:wrap; }
+  .stat-item{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    padding:10px 16px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:.03em;
+    color:var(--text-muted);
+  }
+  .stat-item b{ color:var(--copper); font-weight:700; }
 
+  /* ---------- Quote / terminal ---------- */
+  .quote-section{ max-width:1200px; margin:56px auto 0; padding:0 40px; }
 
-/* =========================================================
-   REDUCED MOTION
-========================================================= */
+  .terminal{
+    background:var(--term-bg);
+    border:1px solid rgba(108,245,163,.18);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .terminal-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    background:rgba(255,255,255,.03);
+    border-bottom:1px solid rgba(108,245,163,.1);
+  }
+  .terminal-bar .dot{ width:10px; height:10px; border-radius:50%; }
+  .dot.red{ background:#f87171; } .dot.yellow{ background:#f5a623; } .dot.green{ background:#4ade80; }
+  .terminal-bar span{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:rgba(108,245,163,.4);
+    margin-left:8px;
+  }
+  .terminal-body{ padding:28px 26px; font-family:'JetBrains Mono',monospace; }
+  .terminal-body .quote-text{
+    font-size:15px;
+    line-height:1.7;
+    color:var(--term-text);
+  }
+  .terminal-body .quote-text::before{ content:"> "; opacity:.6; }
+  .cursor{
+    display:inline-block; width:8px; height:15px;
+    background:var(--term-text);
+    margin-left:2px;
+    animation:blink-cursor 1s step-end infinite;
+    vertical-align:middle;
+  }
+  .quote-author{
+    font-size:11px;
+    color:rgba(108,245,163,.45);
+    margin-top:12px;
+    letter-spacing:.05em;
+  }
+  .quote-author::before{ content:"// "; }
 
-@media(prefers-reduced-motion:reduce){
+  /* ---------- Main ---------- */
+  main{ max-width:1400px; margin:0 auto; padding:90px 40px 40px; position:relative; }
 
-  *{
-    animation-duration:
-      .001ms!important;
+  .section-divider{ width:100%; height:44px; margin-bottom:20px; opacity:.6; }
+  .section-divider path{ fill:none; stroke:var(--border); stroke-width:1.2; stroke-dasharray:3 5; }
 
-    animation-iteration-count:
-      1!important;
+  .section-header{ margin-bottom:56px; }
+  .section-header h2{
+    font-family:'JetBrains Mono',monospace;
+    font-size:36px;
+    font-weight:700;
+    letter-spacing:-.01em;
+    margin-bottom:14px;
+  }
+  .section-description{ font-size:15.5px; color:var(--text-muted); max-width:600px; line-height:1.7; }
 
-    transition-duration:
-      .001ms!important;
+  /* ---------- Grid & cards ---------- */
+  .cards-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
+  @media (max-width:1200px){ .cards-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:720px){ .cards-grid{ grid-template-columns:1fr; } }
 
-    scroll-behavior:
-      auto!important;
+  .card{
+    position:relative;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:32px 26px 26px;
+    text-decoration:none;
+    color:inherit;
+    display:flex;
+    flex-direction:column;
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1), border-color .35s ease, box-shadow .35s ease;
+    opacity:0;
+    transform:translateY(22px);
+  }
+  .card.in-view{ animation:riseIn .6s cubic-bezier(.2,.8,.2,1) forwards; }
+
+  .card::before, .card::after{
+    content:'';
+    position:absolute;
+    left:16px; right:16px;
+    height:5px;
+    background-image:repeating-linear-gradient(90deg, var(--copper) 0 3px, transparent 3px 11px);
+    opacity:.4;
+  }
+  .card::before{ top:-3px; }
+  .card::after{ bottom:-3px; }
+
+  .card:hover{
+    transform:translateY(-8px);
+    border-color:var(--copper);
+    box-shadow:0 22px 50px rgba(0,0,0,.25), 0 0 0 1px rgba(215,166,86,.08);
   }
 
-  .topic-card{
-    opacity:1;
-
-    transform:none;
+  .pin-one{
+    position:absolute; top:14px; left:16px;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--copper); opacity:.7;
   }
 
-}
+  .card-index{
+    position:absolute; top:14px; right:18px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; font-weight:700;
+    color:var(--copper-dim);
+    letter-spacing:.05em;
+  }
 
+  .card-icon{
+    width:54px; height:54px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px;
+    margin:14px 0 18px;
+    transition:transform .35s ease, border-color .35s ease;
+  }
+  .card:hover .card-icon{ transform:scale(1.08) rotate(-4deg); border-color:var(--copper); }
+
+  .card h3{
+    font-family:'JetBrains Mono',monospace;
+    font-size:16.5px; font-weight:700;
+    margin-bottom:10px; line-height:1.35; letter-spacing:-.01em;
+  }
+  .card p{ font-size:13.8px; color:var(--text-muted); line-height:1.65; margin-bottom:22px; flex:1; }
+
+  .card-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:auto; padding-top:14px; border-top:1px dashed var(--border); }
+
+  .status{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:var(--text-muted);
+  }
+  .led{ width:8px; height:8px; border-radius:50%; }
+  .led.on{ background:var(--signal); box-shadow:0 0 7px var(--signal); animation:blink 2.2s ease-in-out infinite; }
+  .led.off{ background:var(--amber); opacity:.65; animation:blink-slow 3.6s ease-in-out infinite; }
+
+  .card-arrow{ font-family:'JetBrains Mono',monospace; font-size:16px; color:var(--text-muted); transition:all .3s ease; }
+  .card:hover .card-arrow{ color:var(--copper); transform:translateX(5px); }
+
+  /* signal trace under card on hover */
+  .card .trace-line{
+    position:absolute; bottom:-1px; left:0; height:2px; width:100%;
+    background:linear-gradient(90deg, transparent, var(--signal), transparent);
+    background-size:50% 100%;
+    background-repeat:no-repeat;
+    background-position:-60% 0;
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  .card:hover .trace-line{ opacity:1; animation:sweep 1.1s ease-in-out infinite; }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:30px; left:50%;
+    transform:translate(-50%,100px);
+    background:var(--bg-card);
+    border:1px solid var(--amber);
+    padding:14px 24px;
+    border-radius:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px; font-weight:500;
+    color:var(--text);
+    opacity:0; pointer-events:none;
+    transition:all .4s ease;
+    z-index:1000;
+    display:flex; align-items:center; gap:10px;
+  }
+  .toast::before{ content:'⚠'; color:var(--amber); }
+  .toast.show{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+
+  /* ---------- Footer ---------- */
+  footer{
+    text-align:center;
+    padding:50px 40px;
+    color:var(--text-muted);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    border-top:1px solid var(--border);
+    margin-top:70px;
+  }
+  footer strong{ color:var(--copper); }
+
+  /* ---------- Motion & a11y ---------- */
+  @keyframes riseIn{ to{ opacity:1; transform:translateY(0);} }
+  @keyframes blink{ 0%,100%{ opacity:1;} 50%{ opacity:.35;} }
+  @keyframes blink-slow{ 0%,80%,100%{ opacity:.65;} 40%{ opacity:.15;} }
+  @keyframes blink-cursor{ 0%,49%{ opacity:1;} 50%,100%{ opacity:0;} }
+  @keyframes sweep{ 0%{ background-position:-60% 0;} 100%{ background-position:160% 0;} }
+
+  :focus-visible{ outline:2px solid var(--signal); outline-offset:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width:768px){
+    header{ padding:44px 20px 40px; }
+    header h1{ font-size:34px; }
+    .tagline{ font-size:14px; }
+    main{ padding:60px 20px 20px; }
+    .section-header h2{ font-size:26px; }
+    .quote-section{ padding:0 20px; }
+    .terminal-body{ padding:20px; }
+  }
+  @media (max-width:480px){
+    header h1{ font-size:26px; }
+    .card{ padding:24px 18px 20px; }
+  }
 </style>
 </head>
 
-
 <body data-theme="dark">
 
-
-<!-- =====================================================
-     HEADER
-===================================================== -->
-
 <header>
-
-  <div class="orb o1"></div>
-
-  <div class="orb o2"></div>
-
-
-  <svg
-    class="circuit"
-    viewBox="0 0 800 300"
-    preserveAspectRatio="none"
-    aria-hidden="true">
-
-    <path
-      d="M0 40H180Q200 40 200 60V120H400"/>
-
-    <path
-      d="M0 220H150Q170 220 170 200V150H500Q520 150 520 170V260H800"/>
-
-    <path
-      d="M600 0V70Q600 90 620 90H800"/>
-
-    <circle cx="200" cy="60" r="4"/>
-
-    <circle cx="400" cy="120" r="4"/>
-
-    <circle cx="520" cy="170" r="4"/>
-
-    <circle cx="620" cy="90" r="4"/>
-
+  <svg class="trace-bg" viewBox="0 0 1200 340" preserveAspectRatio="none">
+    <path id="trace1" d="M -20 60 L 220 60 L 220 140 L 480 140 L 480 40 L 760 40 L 760 180 L 1040 180 L 1040 90 L 1260 90" />
+    <path id="trace2" d="M -20 260 L 160 260 L 160 200 L 400 200 L 400 300 L 700 300 L 700 220 L 980 220 L 980 320 L 1260 320" />
+    <circle class="node" cx="220" cy="60" r="4"></circle>
+    <circle class="node" cx="480" cy="140" r="4"></circle>
+    <circle class="node" cx="760" cy="40" r="4"></circle>
+    <circle class="node" cx="1040" cy="180" r="4"></circle>
+    <circle class="node" cx="160" cy="260" r="4"></circle>
+    <circle class="node" cx="400" cy="200" r="4"></circle>
+    <circle class="node" cx="700" cy="300" r="4"></circle>
+    <circle class="node" cx="980" cy="220" r="4"></circle>
   </svg>
 
-
   <div class="header-inner">
-
-    <div class="brand">
-
-      <div class="brand-mark">
-        ⚡
-      </div>
-
-      <div>
-
-        <p class="eyebrow">
-          Digital Electronics · Module 2
-        </p>
-
-        <h1>
-          Combinational Circuits
-        </h1>
-
-      </div>
-
+    <div class="header-top">
+      <div class="brand-label"><span class="led"></span>MODULE_02 // DIGITAL_ELECTRONICS</div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark theme">
+        <div class="toggle-track">
+          <span id="labelOne">1</span>
+          <span id="labelZero">0</span>
+          <div class="toggle-knob" id="toggleKnob"></div>
+        </div>
+      </button>
     </div>
 
+    <p class="eyebrow">// truth tables · logic gates · no memory required</p>
+    <h1><span class="prompt">&gt;</span> Combinational Circuits</h1>
+    <p class="tagline">Circuits that decide instantly — output depends only on the inputs present right now. Work through eleven interactive labs, from single gates to full arithmetic and routing logic.</p>
 
-    <button
-      id="themeToggle"
-      class="theme-toggle"
-      aria-pressed="false">
-
-      <span
-        class="ic"
-        id="themeIcon">
-        🌙
-      </span>
-
-      <span id="themeLabel">
-        Dark
-      </span>
-
-    </button>
-
+    <div class="stats">
+      <div class="stat-item"><b>11</b> topics</div>
+      <div class="stat-item"><b>9</b> labs live</div>
+      <div class="stat-item">self-paced</div>
+      <div class="stat-item">no memory elements</div>
+    </div>
   </div>
-
-
-  <p class="tagline">
-    Combinational logic has no memory — every output depends
-    only on the present inputs. This module builds that idea
-    up from a single XOR gate to full arithmetic units,
-    comparators, converters, encoders and multiplexers,
-    with a live interactive lab for every circuit.
-  </p>
-
-
-  <div class="stat-row">
-
-    <span class="stat">
-      📚 10 Topics
-    </span>
-
-    <span class="stat">
-      🧪 Interactive Labs
-    </span>
-
-    <span class="stat">
-      ⏱ Self-paced
-    </span>
-
-    <span class="stat">
-      🎓 Gate-level detail
-    </span>
-
-  </div>
-
 </header>
 
-
-<!-- =====================================================
-     QUOTE
-===================================================== -->
-
-<div class="quote-wrap">
-
-  <div class="quote-card">
-
-    <p
-      class="quote-text show"
-      id="quoteText">
-
-      The best way to understand a circuit is to watch its signal move.
-
-    </p>
-
+<section class="quote-section">
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      <span>output.log</span>
+    </div>
+    <div class="terminal-body">
+      <p class="quote-text" id="quoteText">The best way to understand a circuit is to watch its signal move.<span class="cursor"></span></p>
+      <p class="quote-author" id="quoteAuthor">Digital Logic Lab</p>
+    </div>
   </div>
-
-</div>
-
-
-<!-- =====================================================
-     MAIN
-===================================================== -->
+</section>
 
 <main>
+  <svg class="section-divider" viewBox="0 0 1400 44" preserveAspectRatio="none">
+    <path d="M 0 22 L 620 22 L 660 4 L 700 40 L 740 4 L 780 22 L 1400 22"></path>
+  </svg>
 
-  <div class="section-head">
-
-    <h2>
-      Module Topics
-    </h2>
-
-    <p class="section-sub">
-      Tap any topic to open its interactive lab.
-      Green-dot topics are live right now —
-      the rest are on their way.
-    </p>
-
+  <div class="section-header">
+    <h2>Learning path</h2>
+    <p class="section-description">Each block below is one lab on the board. A lit green LED means the circuit is powered up and ready to explore — amber means it's still being wired.</p>
   </div>
 
-
-  <div
-    class="grid"
-    id="grid">
-  </div>
-
+  <div class="cards-grid" id="grid"></div>
 </main>
 
-
-<!-- =====================================================
-     FOOTER
-===================================================== -->
-
 <footer>
-
-  Module 2 · Combinational Circuits —
-  a self-paced interactive digital logic curriculum
-
+  Module 2 · <strong>Combinational Circuits</strong> — self-paced interactive digital logic curriculum
 </footer>
 
-
-<div id="toast"></div>
-
+<div class="toast" id="toast"></div>
 
 <script>
-
-/* =========================================================
-   TOPICS
-========================================================= */
-
-const topics=[
-
-  {
-    icon:'📘',
-    title:'Introduction to Combinational Circuits',
-    desc:'What makes a circuit combinational, how it differs from sequential logic, and why it has no memory of the past.',
-    href:'Comb.html',
-    ready:true
-  },
-
-  {
-    icon:'⊕',
-    title:'Half Adder, Full Adder, Half & Full Subtractor',
-    desc:'Build binary addition and subtraction gate-by-gate with live truth tables, Boolean expressions and animated signal flow.',
-    href:'Adder.html',
-    ready:true
-  },
-
-  {
-    icon:'🔢',
-    title:'4-Bit Adder, Subtractor & Adder/Subtractor',
-    desc:'Cascade Full Adders into a ripple-carry adder, a 2’s complement subtractor, and a combined XOR-controlled unit.',
-    href:'4Bit_Arithmetic_Lab.html',
-    ready:true
-  },
-
-  {
-    icon:'⚖️',
-    title:'Magnitude Comparator',
-    desc:'Compare two binary numbers bit by bit to decide A>B, A=B or A<B using cascaded comparison logic.',
-    href:'Mag.html',
-    ready:true
-  },
-
-  {
-    icon:'🔁',
-    title:'Code Converters',
-    desc:'Convert between Binary, Gray, BCD and Excess-3 codes and see each bit transform live.',
-    href:'Code_Converters.html',
-    ready:true
-  },
-
-  {
-    icon:'✅',
-    title:'Parity Generator and Checker',
-    desc:'Detect single-bit transmission errors using even/odd parity generation and checking circuits.',
-    href:'Parity.html',
-    ready:true
-  },
-
-  {
-    icon:'🔐',
-    title:'Encoders & Decoders',
-    desc:'Compress multiple inputs into fewer output lines, and expand codes back out — the reverse of one another.',
-    href:'Encoders_Decoders.html',
-    ready:true
-  },
-    {
-    icon:'🔐',
-    title:'Encoders & Decoders Analogy',
-    desc:'Compress multiple inputs into fewer output lines, and expand codes back out — the reverse of one another.',
-    href:'Encoders_Decoders_Analogy.html',
-    ready:true
-  },
-
-  {
-    icon:'🔀',
-    title:'Multiplexer & Demultiplexer',
-    desc:'Route one of many inputs to a single output, and one input to many outputs, using select lines.',
-    href:'Multiplexer_Demultiplexer.html',
-    ready:true
-  },
-
-  {
-    icon:'🧩',
-    title:'Function Realization using Multiplexer',
-    desc:'Implement any Boolean function directly on a multiplexer’s data and select lines — no separate gates needed.',
-    href:'Function_Realization_Multiplexer.html',
-    ready:false
-  },
-
-  {
-    icon:'🧠',
-    title:'Function Realization using Decoder',
-    desc:'Use a decoder’s minterm outputs, combined with OR gates, to realize any Boolean function.',
-    href:'Function_Realization_Decoder.html',
-    ready:false
-  }
-
+const topics = [
+  { icon:'📘', title:'Introduction to Combinational Circuits', desc:'Explore what makes circuits combinational and how they differ from sequential logic.', link:'Comb.html', available:true },
+  { icon:'⊕', title:'Half & Full Adders and Subtractors', desc:'Build binary arithmetic circuits with live truth tables and signal visualization.', link:'Adder.html', available:true },
+  { icon:'🔢', title:'4-Bit Arithmetic Circuits', desc:'Cascade full adders into complex arithmetic and computation circuits.', link:'4Bit_Arithmetic_Lab.html', available:true },
+  { icon:'⚖️', title:'Magnitude Comparator', desc:'Compare binary numbers and determine which is greater, equal, or lesser.', link:'Mag.html', available:true },
+  { icon:'🔁', title:'Code Converters', desc:'Convert between Binary, Gray, BCD and Excess-3 with live demonstrations.', link:'Code_Converters.html', available:true },
+  { icon:'✅', title:'Parity Generator & Checker', desc:'Detect transmission errors using parity bits in communication systems.', link:'Parity.html', available:true },
+  { icon:'🔐', title:'Encoders & Decoders', desc:'Compress and expand digital information with encoding and decoding circuits.', link:'Encoders_Decoders.html', available:true },
+  { icon:'🎭', title:'Encoder Decoder Analogy', desc:'Learn through real-world analogies and visual metaphors.', link:'Encoders_Decoders_Analogy.html', available:true },
+  { icon:'🔀', title:'Multiplexer & Demultiplexer', desc:'Route signals through multiple channels with selection logic.', link:'Multiplexer_Demultiplexer.html', available:true },
+  { icon:'🎭', title:'Multiplexer & Demultiplexer Analogy', desc:'Learn through real-world analogies and visual metaphors.', link:'mux_demux_analogy.html', available:true },
+  { icon:'🧩', title:'Function Realization with Multiplexer', desc:'Implement Boolean functions using multiplexer architecture.', link:'Function_Realization_Multiplexer.html', available:false },
+  { icon:'🧠', title:'Function Realization with Decoder', desc:'Use decoders to realize any Boolean logic function.', link:'Function_Realization_Decoder.html', available:false }
 ];
 
-
-/* =========================================================
-   GENERATE TOPIC CARDS
-========================================================= */
-
-const grid=
-  document.getElementById('grid');
-
-
-grid.innerHTML=
-  topics.map((t,i)=>`
-
-  <a
-    class="topic-card"
-    style="--d:${(i*0.05).toFixed(2)}s"
-    href="${t.href}"
-    data-ready="${t.ready}"
-    data-title="${t.title.replace(/"/g,'&quot;')}">
-
-    <div class="topic-top">
-
-      <span class="topic-num">
-
-        ${String(i+1).padStart(2,'0')}
-        /
-        ${String(topics.length).padStart(2,'0')}
-
+const grid = document.getElementById('grid');
+grid.innerHTML = topics.map((t,i) => `
+  <a class="card" href="${t.link}" data-available="${t.available}" data-title="${t.title}">
+    <span class="pin-one"></span>
+    <span class="card-index">U${String(i+1).padStart(2,'0')}</span>
+    <div class="card-icon">${t.icon}</div>
+    <h3>${t.title}</h3>
+    <p>${t.desc}</p>
+    <div class="card-footer">
+      <span class="status">
+        <span class="led ${t.available ? 'on' : 'off'}"></span>
+        ${t.available ? 'Lab active' : 'Standby'}
       </span>
-
+      <span class="card-arrow">→</span>
     </div>
-
-
-    <div class="topic-icon">
-
-      ${t.icon}
-
-    </div>
-
-
-    <h3>
-
-      ${t.title}
-
-    </h3>
-
-
-    <p>
-
-      ${t.desc}
-
-    </p>
-
-
-    <div class="card-bottom">
-
-      <span
-        class="status
-        ${t.ready?'ready':'soon'}">
-
-        <span class="dot"></span>
-
-        ${t.ready
-          ?'Open Lab'
-          :'Coming Soon'
-        }
-
-      </span>
-
-
-      <span class="arrow">
-
-        →
-
-      </span>
-
-    </div>
-
+    <span class="trace-line"></span>
   </a>
-
 `).join('');
 
-
-/* =========================================================
-   COMING SOON HANDLER
-========================================================= */
-
-grid
-.querySelectorAll('.topic-card')
-.forEach(card=>{
-
-  card.addEventListener(
-    'click',
-    e=>{
-
-      if(
-        card.dataset.ready
-        ===
-        'false'
-      ){
-
-        e.preventDefault();
-
-        showToast(
-          `🚧 “${card.dataset.title}” lab is coming soon`
-        );
-
-      }
-
+grid.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (card.dataset.available === 'false') {
+      e.preventDefault();
+      showToast(`"${card.dataset.title}" is still being wired up`);
     }
-  );
-
+  });
 });
 
-
-/* =========================================================
-   TOAST
-========================================================= */
-
 function showToast(msg){
-
-  const el=
-    document.getElementById(
-      'toast'
-    );
-
-  el.textContent=msg;
-
-  el.classList.add(
-    'show'
-  );
-
-  clearTimeout(
-    showToast._t
-  );
-
-  showToast._t=
-    setTimeout(
-      ()=>{
-        el.classList.remove(
-          'show'
-        );
-      },
-      2200
-    );
-
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-
-/* =========================================================
-   CARD ANIMATION
-========================================================= */
-
-const io=
-  new IntersectionObserver(
-    entries=>{
-
-      entries.forEach(
-        en=>{
-
-          if(
-            en.isIntersecting
-          ){
-
-            en.target
-              .classList
-              .add(
-                'in-view'
-              );
-
-            io.unobserve(
-              en.target
-            );
-
-          }
-
-        }
-      );
-
-    },
-    {
-      threshold:.15
+/* Scroll-reveal for cards */
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((entry, idx) => {
+    if (entry.isIntersecting){
+      setTimeout(() => entry.target.classList.add('in-view'), reduceMotion ? 0 : idx * 60);
+      io.unobserve(entry.target);
     }
-  );
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.card').forEach(c => io.observe(c));
 
-
-grid
-.querySelectorAll(
-  '.topic-card'
-)
-.forEach(
-  c=>
-    io.observe(c)
-);
-
-
-/* =========================================================
-   QUOTES
-========================================================= */
-
-const quotes=[
-
-  [
-    "The best way to understand a circuit is to watch its signal move.",
-    "Digital Logic Lab"
-  ],
-
-  [
-    "Logic will get you from A to B. Imagination will take you everywhere.",
-    "Albert Einstein"
-  ],
-
-  [
-    "Computers are good at following instructions, but not at reading your mind.",
-    "Donald Knuth"
-  ],
-
-  [
-    "The chief function of the computer is to do arithmetic — every gate you see here is doing exactly that.",
-    "Digital Logic Lab"
-  ],
-
-  [
-    "Simplicity is the soul of efficiency — a Boolean expression fully reduced is a circuit fully understood.",
-    "Digital Logic Lab"
-  ],
-
-  [
-    "Before software, there was switching — every AND, OR and NOT is a decision frozen in silicon.",
-    "Digital Logic Lab"
-  ],
-
-  [
-    "Every complex processor is, underneath, a very large pile of very simple gates.",
-    "Digital Logic Lab"
-  ],
-
-  [
-    "An expert is a person who has made all the mistakes that can be made in a very narrow field.",
-    "Niels Bohr"
-  ]
-
+/* Quotes rotation */
+const quotes = [
+  ["The best way to understand a circuit is to watch its signal move.", "Digital Logic Lab"],
+  ["Logic will get you from A to B. Imagination will take you everywhere.", "Albert Einstein"],
+  ["Computers are good at following instructions, but not at reading your mind.", "Donald Knuth"],
+  ["Every gate you see here is doing arithmetic.", "Digital Logic Lab"],
+  ["Simplicity is the soul of efficiency in circuit design.", "Digital Logic Lab"],
+  ["Before software, there was switching — every gate frozen in silicon.", "Digital Logic Lab"],
+  ["Every complex processor is just a pile of very simple gates.", "Digital Logic Lab"],
+  ["An expert has made all the mistakes in their field.", "Niels Bohr"]
 ];
-
-
-let qi=0;
-
-const qEl=
-  document.getElementById(
-    'quoteText'
-  );
-
-
-function renderQuote(i){
-
-  const [
-    text,
-    author
-  ]=
-  quotes[i];
-
-
-  qEl
-    .classList
-    .remove(
-      'show'
-    );
-
-
-  setTimeout(
-    ()=>{
-
-      qEl.innerHTML=
-        `${text}
-        <span class="quote-author">
-        — ${author}
-        </span>`;
-
-      qEl
-        .classList
-        .add(
-          'show'
-        );
-
-    },
-    260
-  );
-
+let quoteIndex = 0;
+const quoteEl = document.getElementById('quoteText');
+const authorEl = document.getElementById('quoteAuthor');
+function showQuote(idx){
+  const [text, author] = quotes[idx];
+  quoteEl.innerHTML = `${text}<span class="cursor"></span>`;
+  authorEl.textContent = author;
 }
+showQuote(0);
+setInterval(() => {
+  quoteIndex = (quoteIndex + 1) % quotes.length;
+  showQuote(quoteIndex);
+}, 5000);
 
-
-renderQuote(0);
-
-
-setInterval(
-  ()=>{
-
-    qi=
-      (qi+1)
-      %
-      quotes.length;
-
-    renderQuote(
-      qi
-    );
-
-  },
-  4800
-);
-
-
-/* =========================================================
-   THEME
-========================================================= */
-
-const bodyEl=
-  document.body;
-
-const themeToggle=
-  document.getElementById(
-    'themeToggle'
-  );
-
-const themeIcon=
-  document.getElementById(
-    'themeIcon'
-  );
-
-const themeLabel=
-  document.getElementById(
-    'themeLabel'
-  );
-
-
-let theme=
-  (
-    window.matchMedia
-    &&
-    matchMedia(
-      '(prefers-color-scheme: light)'
-    ).matches
-  )
-  ?
-  'light'
-  :
-  'dark';
-
-
+/* Theme toggle */
+const bodyEl = document.body;
+const themeToggle = document.getElementById('themeToggle');
+const labelOne = document.getElementById('labelOne');
+const labelZero = document.getElementById('labelZero');
+let theme = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 function applyTheme(t){
-
-  bodyEl
-    .setAttribute(
-      'data-theme',
-      t
-    );
-
-  themeToggle
-    .setAttribute(
-      'aria-pressed',
-      t==='light'
-    );
-
-  themeIcon.textContent=
-    t==='dark'
-    ?
-    '🌙'
-    :
-    '☀️';
-
-  themeLabel.textContent=
-    t==='dark'
-    ?
-    'Dark'
-    :
-    'Light';
-
+  bodyEl.setAttribute('data-theme', t);
+  labelOne.classList.toggle('active', t === 'dark');
+  labelZero.classList.toggle('active', t === 'light');
 }
+applyTheme(theme);
+themeToggle.addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  applyTheme(theme);
+});
 
-
-applyTheme(
-  theme
-);
-
-
-themeToggle
-.addEventListener(
-  'click',
-  ()=>{
-
-    theme=
-      theme==='dark'
-      ?
-      'light'
-      :
-      'dark';
-
-    applyTheme(
-      theme
-    );
-
-  }
-);
-
+/* Animated signal pulses travelling along the header PCB traces */
+if (!reduceMotion){
+  ['trace1','trace2'].forEach((id, tIdx) => {
+    const path = document.getElementById(id);
+    const len = path.getTotalLength();
+    const svg = path.closest('svg');
+    for (let p = 0; p < 2; p++){
+      const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('r', 3.5);
+      dot.setAttribute('class','pulse-dot');
+      svg.appendChild(dot);
+      let progress = (p / 2) + (tIdx * 0.17);
+      const speed = 0.00028 + tIdx * 0.00006;
+      function animate(){
+        progress += speed;
+        if (progress > 1) progress = 0;
+        const pt = path.getPointAtLength(progress * len);
+        dot.setAttribute('cx', pt.x);
+        dot.setAttribute('cy', pt.y);
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+  });
+}
 </script>
 
 </body>
