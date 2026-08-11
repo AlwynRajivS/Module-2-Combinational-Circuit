@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encoder & Decoder — The Signal Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#f6f2e7;--surface:#fffdf7;--surface2:#efe7d3;--surface3:#e6dcc2;
+ --ink:#1c2a3a;--muted:#6c6152;--line:#ddd0ac;--line-strong:#c9b98c;
+ --enc:#b5540f;--enc-soft:#f1e0c9;--dec:#0f7a6c;--dec-soft:#d9ecdf;
+ --good:#1a7a3c;--bad:#b7302a;--warn:#a56a06;
+ --shadow:0 18px 44px rgba(60,45,20,.10),0 2px 8px rgba(60,45,20,.06);
+ --grid-line: rgba(120,100,60,.07);
+ --font-display:'Space Grotesk',system-ui,sans-serif;
+ --font-body:'IBM Plex Sans',system-ui,sans-serif;
+ --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+ color-scheme:light;
+}
+[data-theme="dark"]{
+ --bg:#0a0e14;--surface:#101720;--surface2:#161f2b;--surface3:#1c2735;
+ --ink:#e9eef6;--muted:#8b9ab0;--line:#243141;--line-strong:#33465c;
+ --enc:#ffab5c;--enc-soft:#2c2013;--dec:#5eead4;--dec-soft:#0f2622;
+ --good:#4ade80;--bad:#f87171;--warn:#fbbf24;
+ --shadow:0 20px 60px rgba(0,0,0,.45),0 2px 10px rgba(0,0,0,.35);
+ --grid-line: rgba(140,170,220,.06);
+ color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:
+   radial-gradient(circle at 1px 1px, var(--grid-line) 1px, transparent 1.4px) 0 0/26px 26px,
+   var(--bg);
+ color:var(--ink);font:15px/1.6 var(--font-body);transition:background .3s,color .3s;
+}
+button{font:inherit}
+.app{max-width:1240px;margin:auto;padding:24px 22px 10px}
+::selection{background:var(--enc);color:#fff}
+h1,h2,h3{font-family:var(--font-display);letter-spacing:-.01em}
+a{color:var(--enc)}
+:focus-visible{outline:2.5px solid var(--enc);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
+
+/* ---------- topbar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:13px}
+.chiplogo{width:44px;height:44px;position:relative;flex:none}
+.chiplogo svg{width:100%;height:100%}
+.brand h1{font-size:1.02rem;margin:0;font-weight:700}
+.brand small{color:var(--muted);font-family:var(--font-mono);font-size:.72rem;letter-spacing:.02em}
+.theme{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px 8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:.85rem;box-shadow:var(--shadow)}
+.theme .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent)}
+
+/* ---------- hero ---------- */
+.hero{padding:38px 0 8px;display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center}
+.eyebrow{color:var(--enc);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-family:var(--font-mono)}
+.hero h2{font-size:clamp(1.9rem,3.6vw,3rem);line-height:1.08;margin:9px 0 12px;font-weight:700}
+.hero h2 .e{color:var(--enc)}.hero h2 .d{color:var(--dec)}
+.hero p{max-width:520px;color:var(--muted);font-size:1rem}
+.hero-cta{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{border:0;border-radius:11px;padding:11px 18px;font-weight:700;cursor:pointer;font-size:.88rem}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--ink)}
+
+.signal-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:16px 16px 12px}
+.signal-card .cap{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.68rem;color:var(--muted);padding:0 4px 6px;letter-spacing:.04em}
+.signal-card svg{width:100%;height:auto;display:block}
+.trace{fill:none;stroke:var(--line-strong);stroke-width:3}
+.chipnode rect{fill:var(--surface2);stroke:var(--line-strong);stroke-width:1.4}
+.chipnode text{font-family:var(--font-mono);font-weight:600}
+.pin{stroke:var(--line-strong);stroke-width:2}
+.pulse-e{fill:var(--enc)}
+.pulse-d{fill:var(--dec)}
+.buslabel{font-family:var(--font-mono);font-weight:700;font-size:13px}
+#busReadout{fill:var(--ink)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 22px;padding-bottom:2px}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:10px 16px;border-radius:11px;cursor:pointer;font-weight:700;font-size:.86rem;transition:.15s}
+.tab:hover{border-color:var(--line-strong);color:var(--ink)}
+.tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.panel{display:none}.panel.active{display:block;animation:up .35s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- layout helpers ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:1.12rem;font-weight:700}
+.muted{color:var(--muted)}
+.section-title{display:flex;align-items:baseline;gap:10px;margin:34px 0 4px}
+.section-title h3{font-size:1.3rem;margin:0}
+.section-title .tag-sm{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+
+.callout{border-left:4px solid var(--enc);background:var(--enc-soft);padding:13px 15px;border-radius:10px;margin-top:15px;font-size:.93rem}
+.callout.d{border-left-color:var(--dec);background:var(--dec-soft)}
+
+/* ---------- analogy gallery ---------- */
+.analogy-card{cursor:pointer;transition:.18s;padding:16px}
+.analogy-card:hover{transform:translateY(-3px);border-color:var(--line-strong)}
+.analogy-card.selected{border-color:var(--enc);box-shadow:0 0 0 2px color-mix(in srgb,var(--enc) 25%,transparent)}
+.analogy-card.selected.d{border-color:var(--dec);box-shadow:0 0 0 2px color-mix(in srgb,var(--dec) 25%,transparent)}
+.analogy-icon{font-size:1.7rem}
+.analogy-card strong{display:block;margin:8px 0 2px;font-size:.95rem}
+.role-pill{display:inline-block;font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.03em;border-radius:999px;padding:2px 8px;margin-bottom:8px}
+.role-pill.e{background:var(--enc-soft);color:var(--enc)}
+.role-pill.d{background:var(--dec-soft);color:var(--dec)}
+
+/* ---------- flow / trace connectors ---------- */
+.flow{display:grid;grid-template-columns:1fr 64px 1.15fr 64px 1fr;align-items:center;gap:6px;margin:20px 0}
+.node{border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:16px;text-align:center}
+.node .icon{font-size:1.7rem}.node strong{display:block;margin-top:4px;font-size:.9rem}
+.node small{color:var(--muted)}
+.arrowtrace{display:flex;align-items:center;justify-content:center}
+.arrowtrace svg{width:56px;height:20px}
+.chip{border:1.5px solid;border-radius:14px;padding:20px;text-align:center;position:relative}
+.chip.e{border-color:var(--enc);background:var(--enc-soft)}
+.chip.d{border-color:var(--dec);background:var(--dec-soft)}
+.chip .ic{font-size:2rem}.chip b{display:block;margin-top:5px;font-family:var(--font-mono);letter-spacing:.03em}
+
+/* ---------- comparison table ---------- */
+.vs-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.9rem}
+.vs-table th{font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-strong)}
+.vs-table td{padding:10px 10px;border-bottom:1px solid var(--line)}
+.vs-table tr td:first-child{color:var(--muted);font-weight:600;width:26%}
+.vs-table .colE{color:var(--enc);font-weight:600}
+.vs-table .colD{color:var(--dec);font-weight:600}
+
+/* ---------- controls (encoder/decoder labs) ---------- */
+.choice-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.choice{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:13px 8px;cursor:pointer;font-weight:700}
+.choice.active{background:var(--enc);color:#fff;border-color:var(--enc)}
+.result{min-height:66px;margin-top:14px;background:var(--surface2);border-radius:12px;padding:14px}
+.bits{font:700 1.5rem var(--font-mono);color:var(--good)}
+.switches{display:flex;justify-content:center;gap:10px;margin:14px 0}
+.bitbtn{width:56px;height:56px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font-family:var(--font-mono);font-size:1.35rem;font-weight:700;cursor:pointer}
+.bitbtn.on{background:var(--dec);color:#00201b;border-color:var(--dec)}
+.outputs{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.out{padding:14px;border:1px solid var(--line);background:var(--surface2);border-radius:12px;text-align:center;transition:.18s}
+.out.active{border-color:var(--dec);background:var(--dec-soft);transform:scale(1.03)}
+.out .ico{font-size:1.5rem}
+.out8{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.out8 .out{padding:10px 4px;font-size:.8rem}
+
+/* toggle switches for priority encoder / address bits */
+.reqrow{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.reqline{display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface2)}
+.reqline .label{font-family:var(--font-mono);font-weight:700;width:96px}
+.reqline .prio{margin-left:auto;font-size:.72rem;color:var(--muted)}
+.swtoggle{width:42px;height:24px;border-radius:999px;background:var(--surface3);border:1px solid var(--line-strong);position:relative;cursor:pointer;flex:none}
+.swtoggle::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:var(--muted);top:2px;left:2px;transition:.15s}
+.swtoggle.on{background:var(--enc)}
+.swtoggle.on::after{left:20px;background:#fff}
+.reqline.winner{border-color:var(--enc);background:var(--enc-soft)}
+
+/* truth table */
+details.ttable{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+details.ttable summary{cursor:pointer;padding:11px 15px;font-weight:700;font-size:.85rem;background:var(--surface2);list-style:none;display:flex;align-items:center;justify-content:space-between}
+details.ttable summary::-webkit-details-marker{display:none}
+details.ttable summary::after{content:"+";font-family:var(--font-mono);font-size:1.1rem}
+details.ttable[open] summary::after{content:"–"}
+.ttable table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.78rem}
+.ttable td,.ttable th{padding:7px 12px;text-align:center;border-bottom:1px solid var(--line)}
+.ttable th{color:var(--muted);font-weight:600}
+.ttable tr:last-child td{border-bottom:0}
+.ttable tr.hl td{background:color-mix(in srgb, var(--dec) 12%, transparent)}
+
+/* seven segment */
+.sevseg-wrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.sevseg-wrap svg{width:110px;height:180px}
+.seg{fill:var(--line-strong);transition:.15s}
+.seg.on{fill:var(--dec)}
+.digitpicker{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.digitbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:11px 0;font-family:var(--font-mono);font-weight:700;font-size:1rem;cursor:pointer}
+.digitbtn.active{background:var(--dec);color:#00201b;border-color:var(--dec)}
+
+/* memory bank */
+.membank{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.memcell{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:12px 4px;text-align:center;font-family:var(--font-mono);font-size:.78rem;transition:.15s}
+.memcell.active{border-color:var(--dec);background:var(--dec-soft);transform:scale(1.04)}
+.addr-slider{width:100%;margin-top:12px;accent-color:var(--dec)}
+
+/* ---------- applications ---------- */
+.app-card{min-height:198px;position:relative;overflow:hidden;cursor:pointer;transition:.18s}
+.app-card:hover{transform:translateY(-2px)}
+.app-card .app-icon{font-size:1.9rem}
+.tag{display:inline-block;font-size:.66rem;font-weight:700;font-family:var(--font-mono);letter-spacing:.03em;padding:3px 9px;border-radius:999px;margin-top:2px;margin-bottom:8px}
+.tag.e{color:var(--enc);background:var(--enc-soft)}
+.tag.d{color:var(--dec);background:var(--dec-soft)}
+.app-card p{color:var(--muted);font-size:.87rem;margin:4px 0}
+.jumplink{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:var(--ink);border:1px solid var(--line-strong);border-radius:999px;padding:5px 11px;background:var(--surface)}
+
+/* ---------- quiz ---------- */
+.quiz-progress{display:flex;gap:5px;margin-bottom:14px}
+.quiz-progress span{height:5px;flex:1;border-radius:3px;background:var(--line)}
+.quiz-progress span.done{background:var(--good)}
+.quiz-progress span.current{background:var(--enc)}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.quiz-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:13px;border-radius:12px;cursor:pointer;text-align:left;font-size:.88rem}
+.quiz-btn.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.quiz-btn.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.quiz-score{font-family:var(--font-mono);font-weight:700}
+.quiz-next{margin-top:14px}
+
+footer{text-align:center;color:var(--muted);padding:34px 0 20px;font-size:.82rem;font-family:var(--font-mono)}
+
+@media(max-width:860px){
+ .grid2,.grid3{grid-template-columns:1fr}
+ .flow{grid-template-columns:1fr}.arrowtrace svg{transform:rotate(90deg)}
+ .hero{grid-template-columns:1fr}
+ .out8{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){
+ .app{padding:16px}
+ .choice-row{grid-template-columns:1fr 1fr}
+ .quiz-options{grid-template-columns:1fr}
+ .hero h2{font-size:1.9rem}
+ .membank{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="topbar">
+ <div class="brand">
+  <div class="chiplogo">
+   <svg viewBox="0 0 44 44"><rect x="9" y="9" width="26" height="26" rx="5" fill="none" stroke="var(--ink)" stroke-width="2.4"/>
+    <line x1="2" y1="14" x2="9" y2="14" stroke="var(--ink)" stroke-width="2.2"/><line x1="2" y1="22" x2="9" y2="22" stroke="var(--ink)" stroke-width="2.2"/><line x1="2" y1="30" x2="9" y2="30" stroke="var(--ink)" stroke-width="2.2"/>
+    <line x1="35" y1="14" x2="42" y2="14" stroke="var(--ink)" stroke-width="2.2"/><line x1="35" y1="22" x2="42" y2="22" stroke="var(--ink)" stroke-width="2.2"/><line x1="35" y1="30" x2="42" y2="30" stroke="var(--ink)" stroke-width="2.2"/>
+    <circle cx="22" cy="22" r="3" fill="var(--enc)"/>
+   </svg>
+  </div>
+  <div><h1>The Signal Studio</h1><small>ENCODER · DECODER — INTERACTIVE ANALOGY LAB</small></div>
+ </div>
+ <button class="theme" id="themeBtn"><span class="dot"></span><span id="themeLabel">Dark mode</span></button>
+</header>
+
+<section class="hero">
+ <div>
+  <div class="eyebrow">Digital Systems · Combinational Logic</div>
+  <h2>Every wire is telling a story.<br><span class="e">Encoders</span> write it down. <span class="d">Decoders</span> read it back.</h2>
+  <p>Nine real-world analogies, three live circuits per side, and eight everyday applications — explore each one until the logic clicks, not just the definition.</p>
+  <div class="hero-cta">
+   <button class="btn primary" data-jump="story">Start with the story →</button>
+   <button class="btn ghost" data-jump="applications">See applications</button>
+  </div>
+ </div>
+ <div class="signal-card">
+  <div class="cap"><span>LIVE TRACE</span><span id="busReadoutLabel">BUS = 00</span></div>
+  <svg viewBox="0 0 420 150" aria-hidden="true">
+   <path class="trace" d="M60,75 H150 V40 H270 V75 H360"/>
+   <g class="chipnode"><rect x="14" y="52" width="46" height="46" rx="7"/><text x="37" y="79" text-anchor="middle" font-size="10" fill="var(--enc)">ENC</text></g>
+   <g class="chipnode"><rect x="360" y="52" width="46" height="46" rx="7"/><text x="383" y="79" text-anchor="middle" font-size="10" fill="var(--dec)">DEC</text></g>
+   <text x="210" y="30" text-anchor="middle" class="buslabel" fill="var(--muted)">BUS</text>
+   <text id="busReadout" x="210" y="105" text-anchor="middle" class="buslabel" font-size="16">00</text>
+   <circle r="5" class="pulse-e"><animateMotion dur="2.6s" repeatCount="indefinite" path="M60,75 H150 V40 H210"/></circle>
+   <circle r="5" class="pulse-d"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" path="M210,40 H270 V75 H360"/></circle>
+  </svg>
+ </div>
+</section>
+
+<nav class="tabs" aria-label="Learning sections">
+ <button class="tab active" data-panel="story">Story</button>
+ <button class="tab" data-panel="encoder">Encoder Lab</button>
+ <button class="tab" data-panel="decoder">Decoder Lab</button>
+ <button class="tab" data-panel="applications">Applications</button>
+ <button class="tab" data-panel="quiz">Quick Check</button>
+</nav>
+
+<!-- ===================== STORY ===================== -->
+<section class="panel active" id="story">
+ <div class="card">
+  <h3>🎭 Analogy Gallery — every concept has a story first</h3>
+  <p class="muted">Pick any concept below. Read the real-life situation, then map it onto the circuit in one sentence.</p>
+  <div class="grid3" id="analogyGrid">
+   <div class="card analogy-card selected" data-a="basicEncoder"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🏢</div><strong>Basic Encoder</strong><span class="muted">Apartment room → room code</span></div>
+   <div class="card analogy-card" data-a="priority"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🚨</div><strong>Priority Encoder</strong><span class="muted">Emergency queue → priority number</span></div>
+   <div class="card analogy-card" data-a="rotary"><span class="role-pill e">ENCODER</span><div class="analogy-icon">🎚️</div><strong>Rotary Encoder</strong><span class="muted">Knob movement → position code</span></div>
+   <div class="card analogy-card" data-a="keyboard"><span class="role-pill e">ENCODER</span><div class="analogy-icon">⌨️</div><strong>Keyboard Encoder</strong><span class="muted">Key press → character code</span></div>
+   <div class="card analogy-card d" data-a="basicDecoder"><span class="role-pill d">DECODER</span><div class="analogy-icon">🏨</div><strong>Basic Decoder</strong><span class="muted">Room number → room door</span></div>
+   <div class="card analogy-card d" data-a="memory"><span class="role-pill d">DECODER</span><div class="analogy-icon">📬</div><strong>Memory Decoder</strong><span class="muted">House address → correct house</span></div>
+   <div class="card analogy-card d" data-a="display"><span class="role-pill d">DECODER</span><div class="analogy-icon">🔢</div><strong>7-Segment Decoder</strong><span class="muted">Digit code → display shape</span></div>
+   <div class="card analogy-card d" data-a="chip"><span class="role-pill d">DECODER</span><div class="analogy-icon">🏫</div><strong>Chip Select</strong><span class="muted">School address → one classroom</span></div>
+   <div class="card analogy-card d" data-a="demux"><span class="role-pill d">DECODER</span><div class="analogy-icon">🚦</div><strong>Output Selection</strong><span class="muted">Traffic controller → one road</span></div>
+  </div>
+  <div class="callout" id="analogyText" aria-live="polite">
+   <b>Basic Encoder — Apartment analogy:</b> A building has four rooms. Instead of sending four separate signals, the system gives the selected room a compact number: Room 3 → <b>11</b>. The Encoder performs this conversion: <b>selected input → binary code</b>.
+  </div>
+ </div>
+
+ <div class="grid2" style="margin-top:18px">
+  <div class="card">
+   <h3>🔵 Encoder — “Name the selected one”</h3>
+   <p class="muted">Think of a receptionist. A visitor chooses one person from many. The receptionist doesn't repeat everyone's name — she just gives the selected person a short ID number.</p>
+   <div class="flow">
+    <div class="node"><div class="icon">👥</div><strong>Many Inputs</strong><small>People / Keys / Requests</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--enc)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--enc)"/></svg></div>
+    <div class="chip e"><div class="ic">🔵</div><b>ENCODER</b><small>Selection → Code</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--enc)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--enc)"/></svg></div>
+    <div class="node"><div class="icon">🏷️</div><strong>Few Bits</strong><small>Binary ID</small></div>
+   </div>
+   <div class="callout"><b>Analogy:</b> Receptionist gives an ID number to identify one person.<br><b>Digital:</b> Encoder gives a binary code to identify one active input.</div>
+  </div>
+
+  <div class="card">
+   <h3>🟠 Decoder — “Find the selected one”</h3>
+   <p class="muted">Now a security guard receives that ID number. He checks it and opens exactly one door — the correct one.</p>
+   <div class="flow">
+    <div class="node"><div class="icon">🏷️</div><strong>Few Bits</strong><small>Binary ID</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--dec)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--dec)"/></svg></div>
+    <div class="chip d"><div class="ic">🟠</div><b>DECODER</b><small>Code → Selection</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--dec)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--dec)"/></svg></div>
+    <div class="node"><div class="icon">🚪</div><strong>One Output</strong><small>Selected line</small></div>
+   </div>
+   <div class="callout d"><b>Analogy:</b> Security guard reads an ID and finds the correct door.<br><b>Digital:</b> Decoder reads a binary code and activates one output.</div>
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:18px">
+  <h3>🧩 Encoder vs Decoder — side by side</h3>
+  <table class="vs-table">
+   <thead><tr><th>Property</th><th class="colE">Encoder</th><th class="colD">Decoder</th></tr></thead>
+   <tbody>
+    <tr><td>Question it answers</td><td>"Which input is active?"</td><td>"Where should this code go?"</td></tr>
+    <tr><td>Input : Output count</td><td>2ⁿ inputs → n outputs</td><td>n inputs → 2ⁿ outputs</td></tr>
+    <tr><td>Direction of compression</td><td>Wide → Narrow</td><td>Narrow → Wide</td></tr>
+    <tr><td>Typical trigger</td><td>One line goes active</td><td>A binary code arrives</td></tr>
+    <tr><td>Real-world twin</td><td>Receptionist naming a visitor</td><td>Guard opening one door</td></tr>
+    <tr><td>Classic ICs</td><td>74148 (8-to-3 priority)</td><td>74138 (3-to-8), 7447 (BCD-7seg)</td></tr>
+   </tbody>
+  </table>
+ </div>
+</section>
+
+<!-- ===================== ENCODER LAB ===================== -->
+<section class="panel" id="encoder">
+ <div class="section-title"><h3>② Encoder Lab</h3><span class="tag-sm">wide → narrow</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>⌨️ Interactive 4-to-2 Encoder</h3>
+   <p class="muted">Imagine four keyboard keys. Press one. The encoder writes its 2-bit code — exactly like a receptionist writing down a visitor's ID.</p>
+   <div class="choice-row">
+    <button class="choice" data-key="0">Key 0</button><button class="choice" data-key="1">Key 1</button>
+    <button class="choice" data-key="2">Key 2</button><button class="choice" data-key="3">Key 3</button>
+   </div>
+   <div class="result" aria-live="polite"><b>Selected:</b> <span id="encSelected">—</span><br><span class="bits" id="encBits">00</span></div>
+   <details class="ttable">
+    <summary>Truth table — 4-to-2 encoder</summary>
+    <table><thead><tr><th>I3</th><th>I2</th><th>I1</th><th>I0</th><th>Y1</th><th>Y0</th></tr></thead>
+    <tbody id="encTable">
+     <tr><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+     <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+     <tr><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+     <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+    </tbody></table>
+   </details>
+  </div>
+  <div class="card">
+   <h3>Why compress at all?</h3>
+   <p class="muted">Suppose 8 devices can request a processor. Instead of running 8 separate identity wires, a priority encoder sends one compact 3-bit code representing the winning request — fewer wires, same information.</p>
+   <div class="grid3" style="margin-top:15px">
+    <div class="node"><b>4 Inputs</b><br><span class="muted">I₀–I₃</span></div>
+    <div class="node"><b>→</b><br><span class="muted">Encode</span></div>
+    <div class="node"><b>2 Outputs</b><br><span class="muted">Y₁Y₀</span></div>
+   </div>
+   <div class="callout"><b>Key idea:</b> the same information, carried on far fewer wires.</div>
+  </div>
+ </div>
+
+ <div class="section-title"><h3>🚨 Priority Encoder — the hospital desk, live</h3><span class="tag-sm">handles multiple requests at once</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>Flip on several requests</h3>
+   <p class="muted">In real circuits, more than one input can go active together. A <b>priority encoder</b> always reports the <em>highest-priority</em> one — I3 outranks I2, which outranks I1, then I0. Toggle a few switches and watch it decide.</p>
+   <div class="reqrow" id="reqRow">
+    <div class="reqline" data-line="3"><span class="label">I3 — Critical</span><button class="swtoggle" data-idx="3" aria-label="Toggle request I3"></button><span class="prio">highest</span></div>
+    <div class="reqline" data-line="2"><span class="label">I2 — Urgent</span><button class="swtoggle" data-idx="2" aria-label="Toggle request I2"></button><span class="prio"></span></div>
+    <div class="reqline" data-line="1"><span class="label">I1 — Routine</span><button class="swtoggle" data-idx="1" aria-label="Toggle request I1"></button><span class="prio"></span></div>
+    <div class="reqline" data-line="0"><span class="label">I0 — Minor</span><button class="swtoggle" data-idx="0" aria-label="Toggle request I0"></button><span class="prio">lowest</span></div>
+   </div>
+  </div>
+  <div class="card">
+   <h3>Decision</h3>
+   <div class="result" aria-live="polite" id="prioResult"><b>No request active.</b><br>Output stays idle.</div>
+   <div class="callout"><b>Analogy:</b> If three patients arrive together, the desk still calls only the most critical one first — the others wait their turn, unrepresented in this moment's code.</div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== DECODER LAB ===================== -->
+<section class="panel" id="decoder">
+ <div class="section-title"><h3>③ Decoder Lab</h3><span class="tag-sm">narrow → wide</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>🎛️ Interactive 2-to-4 Decoder</h3>
+   <p class="muted">Flip the two input bits. Watch exactly one output become active — like a guard reading an ID and opening one door.</p>
+   <div class="switches">
+    <button class="bitbtn" id="b1" aria-label="Most significant bit">0</button>
+    <button class="bitbtn" id="b0" aria-label="Least significant bit">0</button>
+   </div>
+   <div style="text-align:center"><span class="bits" id="decBits">00</span></div>
+   <details class="ttable">
+    <summary>Truth table — 2-to-4 decoder</summary>
+    <table><thead><tr><th>B1</th><th>B0</th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th></tr></thead>
+    <tbody id="decTable">
+     <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+     <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+     <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+     <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+    </tbody></table>
+   </details>
+  </div>
+  <div class="card">
+   <h3>🚪 Output Selection</h3>
+   <p class="muted">The decoder interprets the binary code and activates the one corresponding line — every other line stays off.</p>
+   <div class="outputs">
+    <div class="out" id="o0"><div class="ico">🚪</div><b>Y₀</b><br>Room 0</div>
+    <div class="out" id="o1"><div class="ico">🚪</div><b>Y₁</b><br>Room 1</div>
+    <div class="out" id="o2"><div class="ico">🚪</div><b>Y₂</b><br>Room 2</div>
+    <div class="out" id="o3"><div class="ico">🚪</div><b>Y₃</b><br>Room 3</div>
+   </div>
+   <div class="callout d" id="decExplain" aria-live="polite">00 selects Y₀.</div>
+  </div>
+ </div>
+
+ <div class="section-title"><h3>📬 Memory Address Decoder — the postal route, live</h3><span class="tag-sm">3-to-8 line, scaled up</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>Slide the address</h3>
+   <p class="muted">A processor puts an address on its address bus. Address-decoding logic finds the one memory bank that should respond — everyone else on the bus ignores it.</p>
+   <input type="range" min="0" max="7" value="0" class="addr-slider" id="addrSlider" aria-label="3-bit address">
+   <div style="text-align:center;margin-top:8px"><span class="bits" id="addrBits">000</span> <span class="muted">→ Bank <span id="addrDec">0</span></span></div>
+  </div>
+  <div class="card">
+   <h3>Memory bank</h3>
+   <div class="membank" id="memBank"></div>
+   <div class="callout d"><b>Analogy:</b> address code = house number, decoder = postal worker, activated bank = the one house that opens its door.</div>
+  </div>
+ </div>
+
+ <div class="section-title"><h3>🔢 BCD → 7-Segment Decoder — drawing digits, live</h3><span class="tag-sm">4 bits in, 7 segments out</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>Pick a digit</h3>
+   <p class="muted">Tell the decoder "draw a 5" and it lights only the strokes a real 5 needs — exactly like an artist who knows which lines to draw and which to leave blank.</p>
+   <div class="digitpicker" id="digitPicker"></div>
+   <div class="result" style="margin-top:12px" id="bcdResult">BCD code: <span class="bits">0000</span></div>
+  </div>
+  <div class="card">
+   <div class="sevseg-wrap">
+    <svg id="sevsegSvg" viewBox="0 0 120 200">
+     <rect class="seg" data-seg="a" x="28" y="6" width="64" height="12" rx="4"/>
+     <rect class="seg" data-seg="f" x="16" y="16" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="b" x="92" y="16" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="g" x="28" y="94" width="64" height="12" rx="4"/>
+     <rect class="seg" data-seg="e" x="16" y="104" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="c" x="92" y="104" width="12" height="76" rx="4"/>
+     <rect class="seg" data-seg="d" x="28" y="182" width="64" height="12" rx="4"/>
+    </svg>
+    <div class="muted" style="font-size:.85rem;max-width:170px">Only the required segments are switched ON. Everything else stays dark — nothing is "guessed."</div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== APPLICATIONS ===================== -->
+<section class="panel" id="applications">
+ <div class="card">
+  <h3>🌍 Applications — every one follows the same pattern</h3>
+  <p class="muted"><b>Real-life analogy → digital signal → circuit role → why it matters.</b> Tap a card to expand it, or jump straight into the matching lab.</p>
+  <div class="grid2" id="appGrid">
+
+   <div class="card app-card" data-app="keyboard" data-jump="encoder">
+    <div class="app-icon">⌨️</div><span class="tag e">ENCODER</span><h3>Keyboard Encoder</h3>
+    <p><b>Analogy:</b> A keyboard is a receptionist. You press one key; it identifies exactly which key you selected and hands over its code.</p>
+    <p class="muted"><b>Flow:</b> Key press → Encoder → Binary/character code → Processor.</p>
+    <span class="jumplink">Try the Encoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="priority" data-jump="encoder">
+    <div class="app-icon">🚨</div><span class="tag e">PRIORITY ENCODER</span><h3>Priority Encoder</h3>
+    <p><b>Analogy:</b> At an emergency desk, several patients may arrive together, but the most critical one is called first.</p>
+    <p class="muted"><b>Flow:</b> Multiple requests → priority decision → one compact binary identity.</p>
+    <span class="jumplink">Try the Encoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="rotary" data-jump="encoder">
+    <div class="app-icon">🎚️</div><span class="tag e">ENCODER</span><h3>Rotary Encoder</h3>
+    <p><b>Analogy:</b> A volume knob. As you rotate it, the system needs to know how far, and sometimes which direction.</p>
+    <p class="muted"><b>Flow:</b> Rotation → pulses/code → controller → position/direction.</p>
+    <span class="jumplink">Try the Encoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="memory" data-jump="decoder">
+    <div class="app-icon">📬</div><span class="tag d">DECODER</span><h3>Memory Address Decoding</h3>
+    <p><b>Analogy:</b> A postal worker receives one address and finds the correct house among thousands.</p>
+    <p class="muted"><b>Flow:</b> Address bits → Decoder → Selected memory bank/chip → Data transfer.</p>
+    <span class="jumplink">Try the Decoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="display" data-jump="decoder">
+    <div class="app-icon">🔢</div><span class="tag d">DECODER</span><h3>7-Segment Display</h3>
+    <p><b>Analogy:</b> Telling an artist "draw a 5" — they know exactly which strokes to make.</p>
+    <p class="muted"><b>Flow:</b> BCD code → Decoder/driver → Segment signals → Digit appears.</p>
+    <span class="jumplink">Try the Decoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="chip" data-jump="decoder">
+    <div class="app-icon">🏫</div><span class="tag d">DECODER</span><h3>Device / Chip Select</h3>
+    <p><b>Analogy:</b> A school office announces a classroom number; only that classroom receives the instruction.</p>
+    <p class="muted"><b>Flow:</b> Address/control code → Decoder → one chip-select line → one peripheral responds.</p>
+    <span class="jumplink">Try the Decoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="demux" data-jump="decoder">
+    <div class="app-icon">🚦</div><span class="tag d">SELECTION</span><h3>Output / Path Selection</h3>
+    <p><b>Analogy:</b> A traffic controller opens exactly the one required road; the rest stay closed.</p>
+    <p class="muted"><b>Flow:</b> Control code → selection logic → one required path/output.</p>
+    <span class="jumplink">Try the Decoder Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="instruction" data-jump="decoder">
+    <div class="app-icon">🤖</div><span class="tag d">DECODER</span><h3>Instruction / Control Decoding</h3>
+    <p><b>Analogy:</b> A robot receives a command card — "move," "stop," "turn" — and its control unit fires the matching action.</p>
+    <p class="muted"><b>Flow:</b> Instruction bits → decoder/control logic → required control signals.</p>
+    <span class="jumplink">Try the Decoder Lab →</span>
+   </div>
+
+  </div>
+
+  <div class="callout" id="appDetail" aria-live="polite">
+   <b>Keyboard Encoder:</b> Key selection → identify the key → create its code → send the code to the processing system.
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:18px">
+  <h3>🎓 The Teaching Formula</h3>
+  <div class="grid3">
+   <div class="node"><b>1. Show the analogy</b><br><span class="muted">“Imagine a receptionist…”</span></div>
+   <div class="node"><b>2. Replace the objects</b><br><span class="muted">Person → Input<br>ID → Binary code</span></div>
+   <div class="node"><b>3. Show the circuit</b><br><span class="muted">Encoder / Decoder does<br>the same job electronically</span></div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="panel" id="quiz">
+ <div class="grid2">
+  <div class="card">
+   <h3>🎯 Quick Concept Check</h3>
+   <div class="quiz-progress" id="quizProgress"></div>
+   <p class="muted" id="quizQ">Which circuit converts a selected input into a binary code?</p>
+   <div class="quiz-options" id="quizOptions">
+    <button class="quiz-btn" data-answer="a">A. Encoder</button>
+    <button class="quiz-btn" data-answer="b">B. Decoder</button>
+    <button class="quiz-btn" data-answer="c">C. Multiplexer</button>
+    <button class="quiz-btn" data-answer="d">D. Counter</button>
+   </div>
+   <div class="result" id="quizResult" aria-live="polite">Choose an answer.</div>
+   <button class="btn primary quiz-next" id="quizNext" style="display:none">Next question →</button>
+  </div>
+  <div class="card">
+   <h3>🧠 Final Memory Map</h3>
+   <div class="callout"><b>ENCODER</b><br>Many inputs → Few outputs → Binary code</div>
+   <div class="callout d"><b>DECODER</b><br>Few inputs → Many outputs → One selected line</div>
+   <div class="callout"><b>Ask yourself:</b> “Am I creating a code, or interpreting a code?”</div>
+   <div class="callout d" style="margin-top:15px"><b>Score:</b> <span class="quiz-score" id="quizScore">0 / 0</span></div>
+  </div>
+ </div>
+</section>
+
+<footer>Interactive Digital Electronics Learning Studio — built for concept-first classroom teaching</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ---------- theme ---------- */
+const themeBtn=$("#themeBtn"), themeLabel=$("#themeLabel");
+function setTheme(dark){
+ document.body.dataset.theme=dark?"dark":"";
+ themeLabel.textContent=dark?"Light mode":"Dark mode";
+ localStorage_safe_set(dark);
+}
+function localStorage_safe_set(dark){ try{ /* artifact sandbox: no persistent storage, keep in-memory only */ }catch(e){} }
+themeBtn.addEventListener("click",()=>setTheme(document.body.dataset.theme!=="dark"));
+const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+setTheme(prefersDark);
+
+/* ---------- tabs + jump links ---------- */
+function activatePanel(id){
+ $$(".tab").forEach(x=>x.classList.toggle("active", x.dataset.panel===id));
+ $$(".panel").forEach(x=>x.classList.toggle("active", x.id===id));
+}
+$$(".tab").forEach(btn=>btn.addEventListener("click",()=>activatePanel(btn.dataset.panel)));
+$$("[data-jump]").forEach(el=>{
+ if(el.classList.contains("app-card")) return; // handled separately below
+ el.addEventListener("click",()=>{ activatePanel(el.dataset.jump); window.scrollTo({top:0,behavior:"smooth"}); });
+});
+
+/* ---------- hero live bus readout ---------- */
+const busCodes=["00","01","10","11"];
+let busIdx=0;
+setInterval(()=>{ busIdx=(busIdx+1)%busCodes.length; const c=busCodes[busIdx];
+ $("#busReadout").textContent=c; $("#busReadoutLabel").textContent="BUS = "+c;
+},2600);
+
+/* ---------- analogy gallery ---------- */
+const analogy={
+ basicEncoder:{cls:"", html:"<b>Basic Encoder — Apartment:</b> Four rooms are like four input lines. The selected room receives a compact room number. Room 3 → <b>11</b>. Digital idea: <b>selected input → binary code</b>."},
+ priority:{cls:"", html:"<b>Priority Encoder — Hospital emergency desk:</b> Several patients may request attention, but the most critical patient is handled first. Digital idea: <b>many active requests → highest-priority input → binary identity</b>."},
+ rotary:{cls:"", html:"<b>Rotary Encoder — Volume knob:</b> Rotating the knob creates digital pulses that tell the controller how far and in which direction it moved. Digital idea: <b>mechanical motion → digital information</b>."},
+ keyboard:{cls:"", html:"<b>Keyboard Encoder — Receptionist:</b> You press one key; the system identifies that key and represents it with a code. Digital idea: <b>key selection → code</b>."},
+ basicDecoder:{cls:"d", html:"<b>Basic Decoder — Hotel reception:</b> A guest gives room number 11. The receptionist identifies Room 3 and directs the guest there. Digital idea: <b>binary code → one selected output</b>."},
+ memory:{cls:"d", html:"<b>Memory Decoder — Postal service:</b> A postal worker reads an address and finds one house among thousands. Digital idea: <b>address bits → decoder → selected memory location/chip</b>."},
+ display:{cls:"d", html:"<b>7-Segment Decoder — Drawing a digit:</b> If someone asks an artist to draw “5”, only the required strokes are drawn. Digital idea: <b>digit code → required LED segments ON</b>."},
+ chip:{cls:"d", html:"<b>Chip Select — School classroom:</b> The office receives a classroom number and sends the announcement only to that room. Digital idea: <b>address/control code → one chip-select line</b>."},
+ demux:{cls:"d", html:"<b>Output Selection — Traffic signal:</b> A controller chooses one road while other roads wait. Digital idea: <b>control information → selected path</b>."}
+};
+$$(".analogy-card").forEach(c=>c.addEventListener("click",()=>{
+ $$(".analogy-card").forEach(x=>x.classList.remove("selected"));c.classList.add("selected");
+ const a=analogy[c.dataset.a];
+ const box=$("#analogyText"); box.className="callout "+a.cls; box.innerHTML=a.html;
+}));
+
+/* ---------- 4-to-2 encoder ---------- */
+$$(".choice").forEach(btn=>btn.addEventListener("click",()=>{
+ $$(".choice").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
+ const n=+btn.dataset.key;$("#encSelected").textContent="Key "+n;$("#encBits").textContent=n.toString(2).padStart(2,"0");
+ $$("#encTable tr").forEach((tr,i)=>tr.classList.toggle("hl", i===n));
+}));
+
+/* ---------- 2-to-4 decoder ---------- */
+let b1=0,b0=0;
+function updateDecoder(){
+ $("#b1").textContent=b1;$("#b0").textContent=b0;
+ $("#b1").classList.toggle("on",!!b1);$("#b0").classList.toggle("on",!!b0);
+ const v=b1*2+b0;$("#decBits").textContent=""+b1+b0;
+ for(let i=0;i<4;i++)$("#o"+i).classList.toggle("active",i===v);
+ $("#decExplain").innerHTML="<b>"+b1+b0+"</b> selects <b>Y"+v+"</b> — only that output is active.";
+ $$("#decTable tr").forEach((tr,i)=>tr.classList.toggle("hl", i===v));
+}
+$("#b1").addEventListener("click",()=>{b1^=1;updateDecoder()});
+$("#b0").addEventListener("click",()=>{b0^=1;updateDecoder()});
+updateDecoder();
+
+/* ---------- priority encoder ---------- */
+const reqState=[false,false,false,false]; // index 0..3
+$$(".swtoggle").forEach(sw=>sw.addEventListener("click",()=>{
+ const i=+sw.dataset.idx; reqState[i]=!reqState[i]; sw.classList.toggle("on",reqState[i]);
+ updatePriority();
+}));
+function updatePriority(){
+ $$(".reqline").forEach(l=>l.classList.remove("winner"));
+ let winner=-1;
+ for(let i=3;i>=0;i--){ if(reqState[i]){ winner=i; break; } }
+ if(winner===-1){
+  $("#prioResult").innerHTML="<b>No request active.</b><br>Output stays idle.";
+ } else {
+  const code=winner.toString(2).padStart(2,"0");
+  document.querySelector('.reqline[data-line="'+winner+'"]').classList.add("winner");
+  $("#prioResult").innerHTML="<b>I"+winner+" wins priority.</b><br><span class=\"bits\">"+code+"</span> — lower-priority requests are ignored this cycle.";
+ }
+}
+updatePriority();
+
+/* ---------- memory address decoder ---------- */
+const memBank=$("#memBank");
+for(let i=0;i<8;i++){
+ const d=document.createElement("div"); d.className="memcell"; d.id="mem"+i;
+ d.innerHTML="🏠<br>Bank "+i; memBank.appendChild(d);
+}
+function updateAddr(v){
+ const bits=v.toString(2).padStart(3,"0");
+ $("#addrBits").textContent=bits; $("#addrDec").textContent=v;
+ for(let i=0;i<8;i++) $("#mem"+i).classList.toggle("active", i===v);
+}
+$("#addrSlider").addEventListener("input",e=>updateAddr(+e.target.value));
+updateAddr(0);
+
+/* ---------- BCD to 7-segment ---------- */
+const segMap={
+ 0:"abcdef",1:"bc",2:"abged",3:"abgcd",4:"fgbc",
+ 5:"afgcd",6:"afgedc",7:"abc",8:"abcdefg",9:"abcdfg"
+};
+const picker=$("#digitPicker");
+for(let d=0;d<10;d++){
+ const b=document.createElement("button"); b.className="digitbtn"; b.textContent=d; b.dataset.d=d;
+ b.addEventListener("click",()=>setDigit(d));
+ picker.appendChild(b);
+}
+function setDigit(d){
+ $$(".digitbtn").forEach(b=>b.classList.toggle("active", +b.dataset.d===d));
+ const on=segMap[d];
+ $$(".seg").forEach(s=>s.classList.toggle("on", on.includes(s.dataset.seg)));
+ $("#bcdResult").innerHTML="BCD code: <span class=\"bits\">"+d.toString(2).padStart(4,"0")+"</span>  → digit "+d;
+}
+setDigit(5);
+
+/* ---------- applications ---------- */
+const appDetails={
+ keyboard:"<b>Keyboard Encoder:</b> Analogy — a receptionist identifies the selected key. Circuit role — converts key selection into a digital/character code for the processor.",
+ memory:"<b>Memory Address Decoder:</b> Analogy — a postal worker reads one address and finds one house. Circuit role — activates the required memory chip/location from address bits.",
+ display:"<b>7-Segment Decoder:</b> Analogy — an artist draws only the strokes needed for a digit. Circuit role — converts a digit code into segment-control signals.",
+ priority:"<b>Priority Encoder:</b> Analogy — a hospital emergency desk serves the most critical patient first. Circuit role — identifies the highest-priority active request and produces its binary code.",
+ rotary:"<b>Rotary Encoder:</b> Analogy — volume knob movement. Circuit role — converts rotation into pulses/code so a controller can determine position or direction.",
+ chip:"<b>Chip Select:</b> Analogy — a school office sends a message to one classroom. Circuit role — a decoder activates one peripheral/chip.",
+ demux:"<b>Output Selection:</b> Analogy — a traffic controller opens one required road. Circuit role — selection logic directs activity to one required output/path.",
+ instruction:"<b>Instruction Decoding:</b> Analogy — a robot command card. Circuit role — interprets instruction bits and generates the control signals needed for the operation."
+};
+$$(".app-card").forEach(c=>c.addEventListener("click",(e)=>{
+ $$(".app-card").forEach(x=>x.style.borderColor="");
+ c.style.borderColor= c.dataset.jump==="encoder" ? "var(--enc)" : "var(--dec)";
+ $("#appDetail").innerHTML=appDetails[c.dataset.app];
+}));
+$$(".app-card .jumplink").forEach(link=>link.addEventListener("click",(e)=>{
+ e.stopPropagation();
+ const card=link.closest(".app-card");
+ activatePanel(card.dataset.jump); window.scrollTo({top:0,behavior:"smooth"});
+}));
+
+/* ---------- quiz ---------- */
+const questions=[
+ {q:"Which circuit converts a selected input into a binary code?", opts:{a:"Encoder",b:"Decoder",c:"Multiplexer",d:"Counter"}, correct:"a", why:"An Encoder converts a selected input into a binary code."},
+ {q:"A 3-to-8 decoder has how many output lines?", opts:{a:"3",b:"6",c:"8",d:"16"}, correct:"c", why:"n inputs produce 2ⁿ outputs, so 3 inputs → 8 outputs."},
+ {q:"In a priority encoder, what happens if two inputs are active at once?", opts:{a:"Both codes are sent together",b:"The circuit locks up",c:"The higher-priority input's code is sent",d:"The output goes to zero"}, correct:"c", why:"Priority encoders always report the highest-priority active input."},
+ {q:"A BCD-to-7-segment decoder is really doing what?", opts:{a:"Amplifying a signal",b:"Converting a 4-bit code into the segment pattern for a digit",c:"Storing a digit in memory",d:"Comparing two numbers"}, correct:"b", why:"It maps a 4-bit BCD code to the exact segments needed to display that digit."},
+ {q:"Which best describes a memory address decoder's job?", opts:{a:"Encode data before storage",b:"Activate the one memory chip/location matching the address bits",c:"Refresh DRAM cells",d:"Compress the address bus"}, correct:"b", why:"Address-decoding logic activates exactly the memory location the address bits point to."}
+];
+let qi=0, score=0, answered=false;
+function renderProgress(){
+ const wrap=$("#quizProgress"); wrap.innerHTML="";
+ questions.forEach((_,i)=>{ const s=document.createElement("span");
+  s.className = i<qi ? "done" : (i===qi ? "current" : ""); wrap.appendChild(s); });
+}
+function renderQuestion(){
+ answered=false;
+ const item=questions[qi];
+ $("#quizQ").textContent=item.q;
+ const optsWrap=$("#quizOptions"); optsWrap.innerHTML="";
+ const letters=["a","b","c","d"];
+ letters.forEach(L=>{
+  const btn=document.createElement("button"); btn.className="quiz-btn"; btn.dataset.answer=L;
+  btn.textContent=L.toUpperCase()+". "+item.opts[L];
+  btn.addEventListener("click",()=>handleAnswer(btn));
+  optsWrap.appendChild(btn);
+ });
+ $("#quizResult").textContent="Choose an answer.";
+ $("#quizNext").style.display="none";
+ $("#quizScore").textContent=score+" / "+qi;
+ renderProgress();
+}
+function handleAnswer(btn){
+ if(answered) return; answered=true;
+ const item=questions[qi];
+ $$(".quiz-btn").forEach(b=>{
+  if(b.dataset.answer===item.correct) b.classList.add("correct");
+  else if(b===btn) b.classList.add("wrong");
+ });
+ const correct = btn.dataset.answer===item.correct;
+ if(correct) score++;
+ $("#quizResult").innerHTML = (correct? "✅ Correct! " : "❌ Not quite. ") + item.why;
+ $("#quizScore").textContent=score+" / "+(qi+1);
+ if(qi<questions.length-1){ $("#quizNext").style.display="inline-block"; }
+ else { $("#quizNext").style.display="none"; $("#quizResult").innerHTML+=" <br><b>Quiz complete — final score "+score+" / "+questions.length+".</b>"; }
+}
+$("#quizNext").addEventListener("click",()=>{ qi++; renderQuestion(); });
+renderQuestion();
+</script>
+</body>
+</html>
