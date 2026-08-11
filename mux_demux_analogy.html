@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Multiplexer & Demultiplexer — The Signal Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#f6f2e7;--surface:#fffdf7;--surface2:#efe7d3;--surface3:#e6dcc2;
+ --ink:#1c2a3a;--muted:#6c6152;--line:#ddd0ac;--line-strong:#c9b98c;
+ --mux:#9333a6;--mux-soft:#f1def0;--demux:#1c6fb0;--demux-soft:#d9e9f6;
+ --good:#1a7a3c;--bad:#b7302a;--warn:#a56a06;
+ --shadow:0 18px 44px rgba(60,45,20,.10),0 2px 8px rgba(60,45,20,.06);
+ --grid-line: rgba(120,100,60,.07);
+ --font-display:'Space Grotesk',system-ui,sans-serif;
+ --font-body:'IBM Plex Sans',system-ui,sans-serif;
+ --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+ color-scheme:light;
+}
+[data-theme="dark"]{
+ --bg:#0a0e14;--surface:#101720;--surface2:#161f2b;--surface3:#1c2735;
+ --ink:#e9eef6;--muted:#8b9ab0;--line:#243141;--line-strong:#33465c;
+ --mux:#e59aff;--mux-soft:#2a1d31;--demux:#7ec4ff;--demux-soft:#132433;
+ --good:#4ade80;--bad:#f87171;--warn:#fbbf24;
+ --shadow:0 20px 60px rgba(0,0,0,.45),0 2px 10px rgba(0,0,0,.35);
+ --grid-line: rgba(140,170,220,.06);
+ color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:
+   radial-gradient(circle at 1px 1px, var(--grid-line) 1px, transparent 1.4px) 0 0/26px 26px,
+   var(--bg);
+ color:var(--ink);font:15px/1.6 var(--font-body);transition:background .3s,color .3s;
+}
+button{font:inherit}
+.app{max-width:1240px;margin:auto;padding:24px 22px 10px}
+::selection{background:var(--mux);color:#fff}
+h1,h2,h3{font-family:var(--font-display);letter-spacing:-.01em}
+a{color:var(--mux)}
+:focus-visible{outline:2.5px solid var(--mux);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
+
+/* ---------- topbar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:13px}
+.chiplogo{width:44px;height:44px;position:relative;flex:none}
+.chiplogo svg{width:100%;height:100%}
+.brand h1{font-size:1.02rem;margin:0;font-weight:700}
+.brand small{color:var(--muted);font-family:var(--font-mono);font-size:.72rem;letter-spacing:.02em}
+.theme{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px 8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:.85rem;box-shadow:var(--shadow)}
+.theme .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent)}
+
+/* ---------- hero ---------- */
+.hero{padding:38px 0 8px;display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center}
+.eyebrow{color:var(--mux);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-family:var(--font-mono)}
+.hero h2{font-size:clamp(1.9rem,3.6vw,3rem);line-height:1.08;margin:9px 0 12px;font-weight:700}
+.hero h2 .m{color:var(--mux)}.hero h2 .x{color:var(--demux)}
+.hero p{max-width:520px;color:var(--muted);font-size:1rem}
+.hero-cta{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{border:0;border-radius:11px;padding:11px 18px;font-weight:700;cursor:pointer;font-size:.88rem}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--ink)}
+
+.signal-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:16px 16px 12px}
+.signal-card .cap{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.68rem;color:var(--muted);padding:0 4px 6px;letter-spacing:.04em}
+.signal-card svg{width:100%;height:auto;display:block}
+.trace{fill:none;stroke:var(--line-strong);stroke-width:3}
+.chipnode rect{fill:var(--surface2);stroke:var(--line-strong);stroke-width:1.4}
+.chipnode text{font-family:var(--font-mono);font-weight:600}
+.pulse-m{fill:var(--mux)}
+.pulse-x{fill:var(--demux)}
+.buslabel{font-family:var(--font-mono);font-weight:700;font-size:13px}
+#busReadout{fill:var(--ink)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 22px;padding-bottom:2px}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:10px 16px;border-radius:11px;cursor:pointer;font-weight:700;font-size:.86rem;transition:.15s}
+.tab:hover{border-color:var(--line-strong);color:var(--ink)}
+.tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.panel{display:none}.panel.active{display:block;animation:up .35s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- layout helpers ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:1.12rem;font-weight:700}
+.muted{color:var(--muted)}
+.section-title{display:flex;align-items:baseline;gap:10px;margin:34px 0 4px}
+.section-title h3{font-size:1.3rem;margin:0}
+.section-title .tag-sm{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+
+.callout{border-left:4px solid var(--mux);background:var(--mux-soft);padding:13px 15px;border-radius:10px;margin-top:15px;font-size:.93rem}
+.callout.x{border-left-color:var(--demux);background:var(--demux-soft)}
+
+/* ---------- analogy gallery ---------- */
+.analogy-card{cursor:pointer;transition:.18s;padding:16px}
+.analogy-card:hover{transform:translateY(-3px);border-color:var(--line-strong)}
+.analogy-card.selected{border-color:var(--mux);box-shadow:0 0 0 2px color-mix(in srgb,var(--mux) 25%,transparent)}
+.analogy-card.selected.x{border-color:var(--demux);box-shadow:0 0 0 2px color-mix(in srgb,var(--demux) 25%,transparent)}
+.analogy-icon{font-size:1.7rem}
+.analogy-card strong{display:block;margin:8px 0 2px;font-size:.95rem}
+.role-pill{display:inline-block;font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.03em;border-radius:999px;padding:2px 8px;margin-bottom:8px}
+.role-pill.m{background:var(--mux-soft);color:var(--mux)}
+.role-pill.x{background:var(--demux-soft);color:var(--demux)}
+
+/* ---------- per-analogy interactive stage ---------- */
+.stage-card{border-style:dashed;border-color:var(--line-strong)}
+.stage-card h3{display:flex;align-items:center;gap:8px}
+.stage-card .stage-hint{color:var(--muted);font-size:.85rem;margin:2px 0 4px}
+.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.stage-item{border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:12px 6px;text-align:center;font-size:.78rem;font-weight:600;transition:.15s;color:var(--ink)}
+.stage-item .si-icon{font-size:1.35rem;display:block;margin-bottom:3px}
+.stage-item.active.mux{border-color:var(--mux);background:var(--mux-soft);transform:scale(1.05)}
+.stage-item.active.demux{border-color:var(--demux);background:var(--demux-soft);transform:scale(1.05)}
+.stage-item .si-val{display:block;margin-top:4px;font-family:var(--font-mono);font-weight:700}
+.line-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface2);margin-bottom:8px}
+.line-row .label{font-family:var(--font-mono);font-weight:700;width:110px}
+.line-row.selected{border-color:var(--mux);background:var(--mux-soft)}
+@media(max-width:700px){.stage-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.stage-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- flow / trace connectors ---------- */
+.flow{display:grid;grid-template-columns:1fr 64px 1.15fr 64px 1fr;align-items:center;gap:6px;margin:20px 0}
+.node{border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:16px;text-align:center}
+.node .icon{font-size:1.7rem}.node strong{display:block;margin-top:4px;font-size:.9rem}
+.node small{color:var(--muted)}
+.arrowtrace{display:flex;align-items:center;justify-content:center}
+.arrowtrace svg{width:56px;height:20px}
+.chip{border:1.5px solid;border-radius:14px;padding:20px;text-align:center;position:relative}
+.chip.m{border-color:var(--mux);background:var(--mux-soft)}
+.chip.x{border-color:var(--demux);background:var(--demux-soft)}
+.chip .ic{font-size:2rem}.chip b{display:block;margin-top:5px;font-family:var(--font-mono);letter-spacing:.03em}
+
+/* ---------- comparison table ---------- */
+.vs-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.9rem}
+.vs-table th{font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-strong)}
+.vs-table td{padding:10px 10px;border-bottom:1px solid var(--line)}
+.vs-table tr td:first-child{color:var(--muted);font-weight:600;width:26%}
+.vs-table .colM{color:var(--mux);font-weight:600}
+.vs-table .colX{color:var(--demux);font-weight:600}
+
+/* ---------- controls (mux/demux labs) ---------- */
+.result{min-height:66px;margin-top:14px;background:var(--surface2);border-radius:12px;padding:14px}
+.bits{font:700 1.5rem var(--font-mono);color:var(--good)}
+.switches{display:flex;justify-content:center;gap:10px;margin:14px 0}
+.bitbtn{width:56px;height:56px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;font-family:var(--font-mono);font-size:1.35rem;font-weight:700;cursor:pointer}
+.bitbtn.on{background:var(--demux);color:#00131f;border-color:var(--demux)}
+.swtoggle{width:42px;height:24px;border-radius:999px;background:var(--surface3);border:1px solid var(--line-strong);position:relative;cursor:pointer;flex:none}
+.swtoggle::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:var(--muted);top:2px;left:2px;transition:.15s}
+.swtoggle.on{background:var(--mux)}
+.swtoggle.on::after{left:20px;background:#fff}
+.outputs{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.out{padding:14px;border:1px solid var(--line);background:var(--surface2);border-radius:12px;text-align:center;transition:.18s}
+.out.active{border-color:var(--demux);background:var(--demux-soft);transform:scale(1.03)}
+.out .ico{font-size:1.5rem}
+.out8{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.out8 .out{padding:10px 4px;font-size:.8rem}
+.addr-slider{width:100%;margin-top:12px;accent-color:var(--demux)}
+.membank{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.memcell{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:12px 4px;text-align:center;font-family:var(--font-mono);font-size:.78rem;transition:.15s}
+.memcell.active{border-color:var(--demux);background:var(--demux-soft);transform:scale(1.04)}
+
+/* truth table */
+details.ttable{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+details.ttable summary{cursor:pointer;padding:11px 15px;font-weight:700;font-size:.85rem;background:var(--surface2);list-style:none;display:flex;align-items:center;justify-content:space-between}
+details.ttable summary::-webkit-details-marker{display:none}
+details.ttable summary::after{content:"+";font-family:var(--font-mono);font-size:1.1rem}
+details.ttable[open] summary::after{content:"–"}
+.ttable table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.78rem}
+.ttable td,.ttable th{padding:7px 12px;text-align:center;border-bottom:1px solid var(--line)}
+.ttable th{color:var(--muted);font-weight:600}
+.ttable tr:last-child td{border-bottom:0}
+.ttable tr.hl td{background:color-mix(in srgb, var(--demux) 12%, transparent)}
+
+/* ---------- applications ---------- */
+.app-card{min-height:198px;position:relative;overflow:hidden;cursor:pointer;transition:.18s}
+.app-card:hover{transform:translateY(-2px)}
+.app-card .app-icon{font-size:1.9rem}
+.tag{display:inline-block;font-size:.66rem;font-weight:700;font-family:var(--font-mono);letter-spacing:.03em;padding:3px 9px;border-radius:999px;margin-top:2px;margin-bottom:8px}
+.tag.m{color:var(--mux);background:var(--mux-soft)}
+.tag.x{color:var(--demux);background:var(--demux-soft)}
+.app-card p{color:var(--muted);font-size:.87rem;margin:4px 0}
+.jumplink{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:var(--ink);border:1px solid var(--line-strong);border-radius:999px;padding:5px 11px;background:var(--surface)}
+
+/* ---------- quiz ---------- */
+.quiz-progress{display:flex;gap:5px;margin-bottom:14px}
+.quiz-progress span{height:5px;flex:1;border-radius:3px;background:var(--line)}
+.quiz-progress span.done{background:var(--good)}
+.quiz-progress span.current{background:var(--mux)}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.quiz-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:13px;border-radius:12px;cursor:pointer;text-align:left;font-size:.88rem}
+.quiz-btn.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.quiz-btn.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.quiz-score{font-family:var(--font-mono);font-weight:700}
+.quiz-next{margin-top:14px}
+
+footer{text-align:center;color:var(--muted);padding:34px 0 20px;font-size:.82rem;font-family:var(--font-mono)}
+
+@media(max-width:860px){
+ .grid2,.grid3{grid-template-columns:1fr}
+ .flow{grid-template-columns:1fr}.arrowtrace svg{transform:rotate(90deg)}
+ .hero{grid-template-columns:1fr}
+ .out8{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){
+ .app{padding:16px}
+ .quiz-options{grid-template-columns:1fr}
+ .hero h2{font-size:1.9rem}
+ .membank{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="topbar">
+ <div class="brand">
+  <div class="chiplogo">
+   <svg viewBox="0 0 44 44"><rect x="9" y="9" width="26" height="26" rx="5" fill="none" stroke="var(--ink)" stroke-width="2.4"/>
+    <line x1="2" y1="14" x2="9" y2="14" stroke="var(--ink)" stroke-width="2.2"/><line x1="2" y1="22" x2="9" y2="22" stroke="var(--ink)" stroke-width="2.2"/><line x1="2" y1="30" x2="9" y2="30" stroke="var(--ink)" stroke-width="2.2"/>
+    <line x1="35" y1="22" x2="42" y2="22" stroke="var(--ink)" stroke-width="2.2"/>
+    <circle cx="22" cy="22" r="3" fill="var(--mux)"/>
+   </svg>
+  </div>
+  <div><h1>The Signal Studio</h1><small>MULTIPLEXER · DEMULTIPLEXER — INTERACTIVE ANALOGY LAB</small></div>
+ </div>
+ <button class="theme" id="themeBtn"><span class="dot"></span><span id="themeLabel">Dark mode</span></button>
+</header>
+
+<section class="hero">
+ <div>
+  <div class="eyebrow">Digital Systems · Combinational Logic</div>
+  <h2>One shared line, many voices.<br><span class="m">Multiplexers</span> pick who talks. <span class="x">Demultiplexers</span> decide who listens.</h2>
+  <p>Twelve real-world analogies, live circuits for both directions, and everyday applications — built so the select lines make intuitive sense before you ever see a truth table.</p>
+  <div class="hero-cta">
+   <button class="btn primary" data-jump="story">Start with the story →</button>
+   <button class="btn ghost" data-jump="applications">See applications</button>
+  </div>
+ </div>
+ <div class="signal-card">
+  <div class="cap"><span>LIVE TRACE</span><span id="busReadoutLabel">SELECT = 00</span></div>
+  <svg viewBox="0 0 420 150" aria-hidden="true">
+   <path class="trace" d="M60,75 H150 V40 H270 V75 H360"/>
+   <g class="chipnode"><rect x="10" y="52" width="50" height="46" rx="7"/><text x="35" y="79" text-anchor="middle" font-size="9" fill="var(--mux)">MUX</text></g>
+   <g class="chipnode"><rect x="360" y="52" width="50" height="46" rx="7"/><text x="385" y="79" text-anchor="middle" font-size="8" fill="var(--demux)">DEMUX</text></g>
+   <text x="210" y="30" text-anchor="middle" class="buslabel" fill="var(--muted)">ONE SHARED LINE</text>
+   <text id="busReadout" x="210" y="105" text-anchor="middle" class="buslabel" font-size="16">00</text>
+   <circle r="5" class="pulse-m"><animateMotion dur="2.6s" repeatCount="indefinite" path="M60,75 H150 V40 H210"/></circle>
+   <circle r="5" class="pulse-x"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" path="M210,40 H270 V75 H360"/></circle>
+  </svg>
+ </div>
+</section>
+
+<nav class="tabs" aria-label="Learning sections">
+ <button class="tab active" data-panel="story">Story</button>
+ <button class="tab" data-panel="mux">Multiplexer Lab</button>
+ <button class="tab" data-panel="demux">Demultiplexer Lab</button>
+ <button class="tab" data-panel="applications">Applications</button>
+ <button class="tab" data-panel="quiz">Quick Check</button>
+</nav>
+
+<!-- ===================== STORY ===================== -->
+<section class="panel active" id="story">
+ <div class="card">
+  <h3>🎭 Analogy Gallery — every concept has a story first</h3>
+  <p class="muted">Pick any concept below. Read the real-life situation, then try it live in the stage underneath.</p>
+  <div class="grid3" id="analogyGrid">
+   <div class="card analogy-card selected" data-a="basicMux"><span class="role-pill m">MUX</span><div class="analogy-icon">🎛️</div><strong>Basic Multiplexer</strong><span class="muted">4 data lines → 1 output</span></div>
+   <div class="card analogy-card" data-a="channel"><span class="role-pill m">MUX</span><div class="analogy-icon">📡</div><strong>Channel Selector</strong><span class="muted">Many feeds → one screen</span></div>
+   <div class="card analogy-card" data-a="kitchen"><span class="role-pill m">MUX</span><div class="analogy-icon">🍽️</div><strong>Restaurant Expo Line</strong><span class="muted">Many chefs → one pass-out</span></div>
+   <div class="card analogy-card" data-a="train"><span class="role-pill m">MUX</span><div class="analogy-icon">🚂</div><strong>Railway Junction</strong><span class="muted">Many tracks → one mainline</span></div>
+   <div class="card analogy-card" data-a="studio"><span class="role-pill m">MUX</span><div class="analogy-icon">🎥</div><strong>Video Switcher</strong><span class="muted">Many cameras → one broadcast</span></div>
+   <div class="card analogy-card" data-a="sensor"><span class="role-pill m">MUX</span><div class="analogy-icon">🌡️</div><strong>Shared Sensor Bus</strong><span class="muted">Many sensors → one reader</span></div>
+   <div class="card analogy-card x" data-a="basicDemux"><span class="role-pill x">DEMUX</span><div class="analogy-icon">🎚️</div><strong>Basic Demultiplexer</strong><span class="muted">1 input → 4 possible lines</span></div>
+   <div class="card analogy-card x" data-a="mail"><span class="role-pill x">DEMUX</span><div class="analogy-icon">📬</div><strong>Mail Sorting Machine</strong><span class="muted">One belt → many bins</span></div>
+   <div class="card analogy-card x" data-a="irrigation"><span class="role-pill x">DEMUX</span><div class="analogy-icon">💧</div><strong>Irrigation Manifold</strong><span class="muted">One pipe → many zones</span></div>
+   <div class="card analogy-card x" data-a="switchboard"><span class="role-pill x">DEMUX</span><div class="analogy-icon">☎️</div><strong>Telephone Switchboard</strong><span class="muted">One call → many extensions</span></div>
+   <div class="card analogy-card x" data-a="baggage"><span class="role-pill x">DEMUX</span><div class="analogy-icon">🧳</div><strong>Baggage Chute Sorter</strong><span class="muted">One belt → many chutes</span></div>
+   <div class="card analogy-card x" data-a="sprinkler"><span class="role-pill x">DEMUX</span><div class="analogy-icon">🌱</div><strong>Sprinkler Selector</strong><span class="muted">One source → many heads</span></div>
+  </div>
+  <div class="callout" id="analogyText" aria-live="polite">
+   <b>Basic Multiplexer — Selector switch:</b> Four data lines sit ready, but only one at a time is allowed onto the shared output wire. A 2-bit select code decides which one gets through. Digital idea: <b>many inputs, one chosen path</b>.
+  </div>
+  <div class="card stage-card" id="analogyStage" style="margin-top:14px"></div>
+ </div>
+
+ <div class="grid2" style="margin-top:18px">
+  <div class="card">
+   <h3>🟣 Multiplexer — “Which line goes through?”</h3>
+   <p class="muted">Think of a restaurant pass. Several chefs have dishes ready, but only one ticket number is called — that dish, and only that dish, goes out through the single pass window.</p>
+   <div class="flow">
+    <div class="node"><div class="icon">🍽️</div><strong>Many Inputs</strong><small>I₀–I₃</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--mux)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--mux)"/></svg></div>
+    <div class="chip m"><div class="ic">🟣</div><b>MUX</b><small>Select → Route</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--mux)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--mux)"/></svg></div>
+    <div class="node"><div class="icon">🚪</div><strong>One Output</strong><small>Y</small></div>
+   </div>
+   <div class="callout"><b>Analogy:</b> The expo calls one ticket number; that dish alone reaches the pass.<br><b>Digital:</b> The select code chooses which input's data reaches Y.</div>
+  </div>
+
+  <div class="card">
+   <h3>🔵 Demultiplexer — “Where does it go?”</h3>
+   <p class="muted">Now imagine a single mail conveyor feeding a sorting machine. The zip code on that one letter decides which single bin it drops into — every other bin stays empty.</p>
+   <div class="flow">
+    <div class="node"><div class="icon">📬</div><strong>One Input</strong><small>D</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--demux)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--demux)"/></svg></div>
+    <div class="chip x"><div class="ic">🔵</div><b>DEMUX</b><small>Select → Distribute</small></div>
+    <div class="arrowtrace"><svg viewBox="0 0 56 20"><path d="M2,10 H44" stroke="var(--demux)" stroke-width="2.5"/><path d="M38,4 L48,10 L38,16 Z" fill="var(--demux)"/></svg></div>
+    <div class="node"><div class="icon">📦</div><strong>Many Outputs</strong><small>Y₀–Y₃</small></div>
+   </div>
+   <div class="callout x"><b>Analogy:</b> One letter, read once, drops into exactly one bin.<br><b>Digital:</b> The select code decides which single output line carries the input data.</div>
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:18px">
+  <h3>🧩 Multiplexer vs Demultiplexer — side by side</h3>
+  <table class="vs-table">
+   <thead><tr><th>Property</th><th class="colM">Multiplexer</th><th class="colX">Demultiplexer</th></tr></thead>
+   <tbody>
+    <tr><td>Question it answers</td><td>"Which input reaches the output?"</td><td>"Which output should this input reach?"</td></tr>
+    <tr><td>Input : Output count</td><td>2ⁿ data inputs → 1 output</td><td>1 input → 2ⁿ outputs</td></tr>
+    <tr><td>Select lines needed</td><td>n lines choose among 2ⁿ inputs</td><td>n lines choose among 2ⁿ outputs</td></tr>
+    <tr><td>Direction of flow</td><td>Many → One (data selector)</td><td>One → Many (data distributor)</td></tr>
+    <tr><td>Real-world twin</td><td>Expo calling one ticket to the pass</td><td>Mail sorter dropping a letter in one bin</td></tr>
+    <tr><td>Classic ICs</td><td>74151 (8-to-1), 74153 (dual 4-to-1)</td><td>74138 (used as 1-to-8), 74139 (dual 1-to-4)</td></tr>
+   </tbody>
+  </table>
+  <div class="callout" style="margin-top:14px"><b>Note the mirror:</b> a Decoder is really a Demultiplexer whose data input is tied permanently "on," and a Multiplexer is what an Encoder would need if the inputs carried real data instead of just a position. Same select-line logic, different job on the data line.</div>
+ </div>
+</section>
+
+<!-- ===================== MUX LAB ===================== -->
+<section class="panel" id="mux">
+ <div class="section-title"><h3>② Multiplexer Lab</h3><span class="tag-sm">many data lines → one output</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>🎛️ Interactive 4-to-1 Multiplexer</h3>
+   <p class="muted">Each line below carries its own data bit — flip them freely. Then change the select bits and watch <b>Y</b> always equal whichever line is currently chosen.</p>
+   <div id="muxLines"></div>
+   <div class="switches" style="margin-top:6px">
+    <button class="bitbtn" id="mS1" aria-label="Select bit 1">0</button>
+    <button class="bitbtn" id="mS0" aria-label="Select bit 0">0</button>
+   </div>
+   <div class="result" aria-live="polite" id="muxResult"><b>Select 00 → Line I0 connected.</b><br>Y = <span class="bits" id="muxY">0</span></div>
+   <details class="ttable">
+    <summary>Truth table — which line reaches Y</summary>
+    <table><thead><tr><th>S1</th><th>S0</th><th>Y =</th></tr></thead>
+    <tbody id="muxTable">
+     <tr><td>0</td><td>0</td><td>I0</td></tr>
+     <tr><td>0</td><td>1</td><td>I1</td></tr>
+     <tr><td>1</td><td>0</td><td>I2</td></tr>
+     <tr><td>1</td><td>1</td><td>I3</td></tr>
+    </tbody></table>
+   </details>
+  </div>
+  <div class="card">
+   <h3>Why share one line?</h3>
+   <p class="muted">Instead of routing 8 sensor wires all the way to a single analog-to-digital converter, an 8-to-1 multiplexer lets one converter read any sensor on demand — far less wiring for the same information.</p>
+   <div class="grid3" style="margin-top:15px">
+    <div class="node"><b>4 Data In</b><br><span class="muted">I₀–I₃</span></div>
+    <div class="node"><b>→</b><br><span class="muted">Select</span></div>
+    <div class="node"><b>1 Output</b><br><span class="muted">Y</span></div>
+   </div>
+   <div class="callout"><b>Key idea:</b> one shared wire can carry any of many signals, one at a time, on demand.</div>
+  </div>
+ </div>
+
+ <div class="section-title"><h3>🌡️ Shared Sensor Bus — 8-to-1, live</h3><span class="tag-sm">one ADC, eight sensors</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>Slide the address</h3>
+   <p class="muted">Eight temperature sensors are wired to one shared bus. The select address decides which single sensor's reading is allowed through to the converter this instant.</p>
+   <input type="range" min="0" max="7" value="0" class="addr-slider" id="muxAddrSlider" aria-label="3-bit select address">
+   <div style="text-align:center;margin-top:8px"><span class="bits" id="muxAddrBits">000</span> <span class="muted">→ Sensor <span id="muxAddrDec">0</span></span></div>
+  </div>
+  <div class="card">
+   <h3>Sensor bank</h3>
+   <div class="membank" id="muxSensorBank"></div>
+   <div class="callout"><b>Analogy:</b> select code = ticket number, multiplexer = expo runner, connected sensor = the one dish carried to the pass window.</div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== DEMUX LAB ===================== -->
+<section class="panel" id="demux">
+ <div class="section-title"><h3>③ Demultiplexer Lab</h3><span class="tag-sm">one input → many possible outputs</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>🎚️ Interactive 1-to-4 Demultiplexer</h3>
+   <p class="muted">Set the single data bit D. Then change the select bits — only the chosen output ever shows that value; every other output stays at 0.</p>
+   <div class="line-row" id="demuxDataRow"><span class="label">Data D</span><button class="swtoggle" id="demuxDataToggle" aria-label="Toggle input data bit"></button></div>
+   <div class="switches">
+    <button class="bitbtn" id="xS1" aria-label="Select bit 1">0</button>
+    <button class="bitbtn" id="xS0" aria-label="Select bit 0">0</button>
+   </div>
+   <div class="outputs">
+    <div class="out" id="xo0"><div class="ico">📦</div><b>Y₀</b><br><span class="bits" id="xo0v">0</span></div>
+    <div class="out" id="xo1"><div class="ico">📦</div><b>Y₁</b><br><span class="bits" id="xo1v">0</span></div>
+    <div class="out" id="xo2"><div class="ico">📦</div><b>Y₂</b><br><span class="bits" id="xo2v">0</span></div>
+    <div class="out" id="xo3"><div class="ico">📦</div><b>Y₃</b><br><span class="bits" id="xo3v">0</span></div>
+   </div>
+   <div class="callout x" id="xExplain" aria-live="polite">Select 00 routes D to Y0.</div>
+   <details class="ttable">
+    <summary>Truth table — 1-to-4 demultiplexer</summary>
+    <table><thead><tr><th>S1</th><th>S0</th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th></tr></thead>
+    <tbody id="xTable">
+     <tr><td>0</td><td>0</td><td>D</td><td>0</td><td>0</td><td>0</td></tr>
+     <tr><td>0</td><td>1</td><td>0</td><td>D</td><td>0</td><td>0</td></tr>
+     <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>D</td><td>0</td></tr>
+     <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>D</td></tr>
+    </tbody></table>
+   </details>
+  </div>
+  <div class="card">
+   <h3>Why distribute from one line?</h3>
+   <p class="muted">A single processor pin can control 8 different devices one at a time by pairing a demultiplexer with a 3-bit address — no need for 8 separate control wires all the way back to the processor.</p>
+   <div class="grid3" style="margin-top:15px">
+    <div class="node"><b>1 Data In</b><br><span class="muted">D</span></div>
+    <div class="node"><b>→</b><br><span class="muted">Select</span></div>
+    <div class="node"><b>4 Outputs</b><br><span class="muted">Y₀–Y₃</span></div>
+   </div>
+   <div class="callout x"><b>Key idea:</b> one signal, steered on demand to exactly the destination that needs it.</div>
+  </div>
+ </div>
+
+ <div class="section-title"><h3>📬 Mail Sorting Machine — 1-to-8, live</h3><span class="tag-sm">one belt, eight bins</span></div>
+ <div class="grid2">
+  <div class="card">
+   <h3>Toggle the letter, slide the code</h3>
+   <p class="muted">A letter moves past the reader on the belt. If it's marked (D = 1), the 3-bit zip code decides which single bin catches it — everywhere else stays empty.</p>
+   <div class="line-row"><span class="label">Letter present</span><button class="swtoggle" id="mailDataToggle" aria-label="Toggle letter present"></button></div>
+   <input type="range" min="0" max="7" value="0" class="addr-slider" id="mailSlider" aria-label="3-bit bin address">
+   <div style="text-align:center;margin-top:8px"><span class="bits" id="mailBits">000</span> <span class="muted">→ Bin <span id="mailDec">0</span></span></div>
+  </div>
+  <div class="card">
+   <h3>Bin bank</h3>
+   <div class="membank" id="mailBank"></div>
+   <div class="callout x"><b>Analogy:</b> zip code = select bits, sorter = demultiplexer, letter = the data bit being distributed to exactly one bin.</div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== APPLICATIONS ===================== -->
+<section class="panel" id="applications">
+ <div class="card">
+  <h3>🌍 Applications — every one follows the same pattern</h3>
+  <p class="muted"><b>Real-life analogy → digital signal → circuit role → why it matters.</b> Tap a card to expand it, or jump straight into the matching lab.</p>
+  <div class="grid2" id="appGrid">
+
+   <div class="card app-card" data-app="channel" data-jump="mux">
+    <div class="app-icon">📡</div><span class="tag m">MULTIPLEXER</span><h3>Channel / Feed Selector</h3>
+    <p><b>Analogy:</b> Many broadcast feeds arrive at a receiver; only the selected channel number reaches the screen.</p>
+    <p class="muted"><b>Flow:</b> Many feeds → Select code → Multiplexer → One feed on screen.</p>
+    <span class="jumplink">Try the Multiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="sensor" data-jump="mux">
+    <div class="app-icon">🌡️</div><span class="tag m">MULTIPLEXER</span><h3>Shared Sensor / ADC Bus</h3>
+    <p><b>Analogy:</b> Many sensors share one analog-to-digital converter instead of each needing its own.</p>
+    <p class="muted"><b>Flow:</b> Sensor array → Select address → Multiplexer → One reading at a time.</p>
+    <span class="jumplink">Try the Multiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="studio" data-jump="mux">
+    <div class="app-icon">🎥</div><span class="tag m">MULTIPLEXER</span><h3>Video / Camera Switcher</h3>
+    <p><b>Analogy:</b> A director watches several camera feeds but sends only one to the live broadcast at a time.</p>
+    <p class="muted"><b>Flow:</b> Camera feeds → Director's select → Multiplexer → Broadcast output.</p>
+    <span class="jumplink">Try the Multiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="train" data-jump="mux">
+    <div class="app-icon">🚂</div><span class="tag m">MULTIPLEXER</span><h3>Railway Junction</h3>
+    <p><b>Analogy:</b> Several incoming tracks converge; the switch operator lets exactly one train onto the mainline.</p>
+    <p class="muted"><b>Flow:</b> Multiple tracks → Switch selection → One train proceeds.</p>
+    <span class="jumplink">Try the Multiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="mail" data-jump="demux">
+    <div class="app-icon">📬</div><span class="tag x">DEMULTIPLEXER</span><h3>Mail / Package Sorting</h3>
+    <p><b>Analogy:</b> One conveyor belt reads a zip code and drops each item into exactly one bin.</p>
+    <p class="muted"><b>Flow:</b> One item → Address code → Demultiplexer → One bin.</p>
+    <span class="jumplink">Try the Demultiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="switchboard" data-jump="demux">
+    <div class="app-icon">☎️</div><span class="tag x">DEMULTIPLEXER</span><h3>Telephone Switchboard</h3>
+    <p><b>Analogy:</b> One incoming trunk line is routed by an operator (or digital exchange) to exactly one extension.</p>
+    <p class="muted"><b>Flow:</b> One call → Extension code → Demultiplexer → One ringing phone.</p>
+    <span class="jumplink">Try the Demultiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="irrigation" data-jump="demux">
+    <div class="app-icon">💧</div><span class="tag x">DEMULTIPLEXER</span><h3>Irrigation Manifold</h3>
+    <p><b>Analogy:</b> One water main feeds a manifold that opens exactly one valve to water a chosen field zone.</p>
+    <p class="muted"><b>Flow:</b> One water source → Zone select → Demultiplexer → One zone wet.</p>
+    <span class="jumplink">Try the Demultiplexer Lab →</span>
+   </div>
+
+   <div class="card app-card" data-app="baggage" data-jump="demux">
+    <div class="app-icon">🧳</div><span class="tag x">DEMULTIPLEXER</span><h3>Airport Baggage Sorter</h3>
+    <p><b>Analogy:</b> A scanned bag's flight code sends it down exactly one chute toward the right aircraft.</p>
+    <p class="muted"><b>Flow:</b> One bag on belt → Flight code → Demultiplexer → One chute.</p>
+    <span class="jumplink">Try the Demultiplexer Lab →</span>
+   </div>
+
+  </div>
+
+  <div class="callout" id="appDetail" aria-live="polite">
+   <b>Channel Selector:</b> Feed arrival → identify the requested channel → route only that feed → display it.
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:18px">
+  <h3>🎓 The Teaching Formula</h3>
+  <div class="grid3">
+   <div class="node"><b>1. Show the analogy</b><br><span class="muted">“Imagine an expo caller…”</span></div>
+   <div class="node"><b>2. Replace the objects</b><br><span class="muted">Ticket number → Select bits<br>Dish → Data bit</span></div>
+   <div class="node"><b>3. Show the circuit</b><br><span class="muted">MUX / DEMUX does<br>the same job electronically</span></div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="panel" id="quiz">
+ <div class="grid2">
+  <div class="card">
+   <h3>🎯 Quick Concept Check</h3>
+   <div class="quiz-progress" id="quizProgress"></div>
+   <p class="muted" id="quizQ">Which circuit selects one of many data inputs to route to a single output?</p>
+   <div class="quiz-options" id="quizOptions">
+    <button class="quiz-btn" data-answer="a">A. Multiplexer</button>
+    <button class="quiz-btn" data-answer="b">B. Demultiplexer</button>
+    <button class="quiz-btn" data-answer="c">C. Encoder</button>
+    <button class="quiz-btn" data-answer="d">D. Flip-flop</button>
+   </div>
+   <div class="result" id="quizResult" aria-live="polite">Choose an answer.</div>
+   <button class="btn primary quiz-next" id="quizNext" style="display:none">Next question →</button>
+  </div>
+  <div class="card">
+   <h3>🧠 Final Memory Map</h3>
+   <div class="callout"><b>MULTIPLEXER</b><br>Many data inputs → Select code → One output</div>
+   <div class="callout x"><b>DEMULTIPLEXER</b><br>One data input → Select code → One of many outputs</div>
+   <div class="callout"><b>Ask yourself:</b> “Am I choosing which input to send out, or choosing where one input should go?”</div>
+   <div class="callout x" style="margin-top:15px"><b>Score:</b> <span class="quiz-score" id="quizScore">0 / 0</span></div>
+  </div>
+ </div>
+</section>
+
+<footer>Interactive Digital Electronics Learning Studio — built for concept-first classroom teaching</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ---------- theme ---------- */
+const themeBtn=$("#themeBtn"), themeLabel=$("#themeLabel");
+function setTheme(dark){
+ document.body.dataset.theme=dark?"dark":"";
+ themeLabel.textContent=dark?"Light mode":"Dark mode";
+}
+themeBtn.addEventListener("click",()=>setTheme(document.body.dataset.theme!=="dark"));
+const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+setTheme(prefersDark);
+
+/* ---------- tabs + jump links ---------- */
+function activatePanel(id){
+ $$(".tab").forEach(x=>x.classList.toggle("active", x.dataset.panel===id));
+ $$(".panel").forEach(x=>x.classList.toggle("active", x.id===id));
+}
+$$(".tab").forEach(btn=>btn.addEventListener("click",()=>activatePanel(btn.dataset.panel)));
+$$(".hero-cta [data-jump]").forEach(el=>{
+ el.addEventListener("click",()=>{ activatePanel(el.dataset.jump); window.scrollTo({top:0,behavior:"smooth"}); });
+});
+
+/* ---------- hero live bus readout ---------- */
+const busCodes=["00","01","10","11"];
+let busIdx=0;
+setInterval(()=>{ busIdx=(busIdx+1)%busCodes.length; const c=busCodes[busIdx];
+ $("#busReadout").textContent=c; $("#busReadoutLabel").textContent="SELECT = "+c;
+},2600);
+
+/* ---------- analogy gallery text ---------- */
+const analogy={
+ basicMux:{cls:"", html:"<b>Basic Multiplexer — Selector switch:</b> Four data lines sit ready, but only one at a time is allowed onto the shared output wire. A 2-bit select code decides which one gets through. Digital idea: <b>many inputs, one chosen path</b>."},
+ channel:{cls:"", html:"<b>Channel Selector — TV/Radio tuner:</b> Many broadcast feeds arrive at once; the channel number you dial in is the select code that lets exactly one feed reach the screen or speaker."},
+ kitchen:{cls:"", html:"<b>Restaurant Expo Line:</b> Several chefs have dishes ready on the pass, but the expo calls one ticket number at a time — only that dish moves out to the dining room. Digital idea: <b>select code chooses which input's data is passed on</b>."},
+ train:{cls:"", html:"<b>Railway Junction:</b> Several tracks converge toward one mainline. The switch operator's decision — the select signal — determines which single train is allowed through."},
+ studio:{cls:"", html:"<b>Video Switcher — TV studio:</b> Multiple camera feeds run continuously, but the director's switcher sends only one, chosen live, out to the broadcast signal."},
+ sensor:{cls:"", html:"<b>Shared Sensor Bus:</b> Eight sensors could each need their own wire to a converter — instead, a multiplexer lets one shared wire carry any single sensor's reading, chosen by address, one at a time."},
+ basicDemux:{cls:"x", html:"<b>Basic Demultiplexer — Reverse selector:</b> One data line carries a signal; a 2-bit select code decides which single one of four output lines receives it. Digital idea: <b>one input, many possible destinations</b>."},
+ mail:{cls:"x", html:"<b>Mail Sorting Machine:</b> One conveyor feeds the sorter. It reads the zip code on each letter and drops it into exactly one bin among many — nothing else moves."},
+ irrigation:{cls:"x", html:"<b>Irrigation Manifold:</b> A single water main feeds a manifold of valves. Opening just one valve — the select signal — sends water to exactly one field zone."},
+ switchboard:{cls:"x", html:"<b>Telephone Switchboard:</b> One incoming call arrives on a single trunk line. The dialed extension number is the select code that routes the call to exactly one phone."},
+ baggage:{cls:"x", html:"<b>Airport Baggage Chute Sorter:</b> Bags travel one at a time on a single belt. A scanned flight code sends each bag down exactly one chute toward its aircraft."},
+ sprinkler:{cls:"x", html:"<b>Sprinkler Selector:</b> One water source feeds a distributor. The zone dial — the select code — opens exactly one sprinkler head while the rest stay dry."}
+};
+
+/* ---------- interactive analogy stage engine ---------- */
+const genItems=(n,icon,prefix)=>Array.from({length:n},(_,i)=>({icon,label:prefix+" "+i}));
+const widthFor=n=>Math.max(1,Math.round(Math.log2(n)));
+
+const stageConfig={
+ basicMux:{kind:"MUX",title:"Route through the multiplexer",items:genItems(4,"🎚️","Line")},
+ channel:{kind:"MUX",title:"Tune the channel selector",items:genItems(4,"📡","Feed")},
+ kitchen:{kind:"MUX",title:"Call a ticket number",items:genItems(4,"🍽️","Chef")},
+ train:{kind:"MUX",title:"Switch the junction",items:genItems(4,"🚂","Track")},
+ studio:{kind:"MUX",title:"Cut to a camera",items:genItems(4,"🎥","Camera")},
+ sensor:{kind:"MUX",title:"Read a sensor",items:genItems(4,"🌡️","Sensor")},
+ basicDemux:{kind:"DEMUX",title:"Route the demultiplexer",items:genItems(4,"🎚️","Line")},
+ mail:{kind:"DEMUX",title:"Sort the letter",items:genItems(4,"📬","Bin")},
+ irrigation:{kind:"DEMUX",title:"Open a valve",items:genItems(4,"💧","Zone")},
+ switchboard:{kind:"DEMUX",title:"Ring an extension",items:genItems(4,"☎️","Ext")},
+ baggage:{kind:"DEMUX",title:"Send down a chute",items:genItems(4,"🧳","Chute")},
+ sprinkler:{kind:"DEMUX",title:"Water a zone",items:genItems(4,"🌱","Head")}
+};
+
+const stageEl=$("#analogyStage");
+let stageState={};
+
+function shell(title,hint,body){
+ stageEl.innerHTML=`<h3>🎮 Try it — ${title}</h3><p class="stage-hint">${hint}</p>${body}`;
+}
+
+function renderStage(key){
+ const cfg=stageConfig[key];
+ if(cfg.kind==="MUX") return renderStageMux(cfg);
+ if(cfg.kind==="DEMUX") return renderStageDemux(cfg);
+}
+
+function renderStageMux(cfg){
+ const width=widthFor(cfg.items.length);
+ stageState={cfg,width,data:cfg.items.map((_,i)=>i%2),select:Array(width).fill(0)};
+ const rows=cfg.items.map((it,i)=>`
+  <div class="line-row" id="stageLine${i}">
+   <span class="label">${it.icon} ${it.label}</span>
+   <button class="swtoggle" data-role="m-data" data-idx="${i}"></button>
+  </div>`).join("");
+ let selBtns=""; for(let i=0;i<width;i++) selBtns+=`<button class="bitbtn" data-role="m-sel" data-idx="${i}">0</button>`;
+ shell(cfg.title,"Flip each line's data bit, then change the select code — Y always equals the chosen line.",
+  `<div>${rows}</div>
+   <div class="switches">${selBtns}</div>
+   <div class="result" id="stageExplain"></div>`);
+ updateStageMux();
+}
+function updateStageMux(){
+ const {cfg,width,data,select}=stageState;
+ $$("#analogyStage [data-role='m-data']").forEach((b,i)=>b.classList.toggle("on",!!data[i]));
+ $$("#analogyStage [data-role='m-sel']").forEach((b,i)=>{b.textContent=select[i];b.classList.toggle("on",!!select[i]);});
+ const code=select.join(""); const value=parseInt(code,2);
+ cfg.items.forEach((it,i)=>{ $("#stageLine"+i).classList.toggle("selected",i===value); });
+ $("#stageExplain").innerHTML=`<b>Select ${code} → ${cfg.items[value].icon} ${cfg.items[value].label} connected.</b><br>Y = <span class="bits">${data[value]}</span>`;
+}
+function handleStageMuxData(idx){ stageState.data[idx]^=1; updateStageMux(); }
+function handleStageMuxSel(idx){ stageState.select[idx]^=1; updateStageMux(); }
+
+function renderStageDemux(cfg){
+ const width=widthFor(cfg.items.length);
+ stageState={cfg,width,data:1,select:Array(width).fill(0)};
+ const grid=cfg.items.map((it,i)=>`<div class="stage-item" id="stageOut${i}"><span class="si-icon">${it.icon}</span>${it.label}<span class="si-val" id="stageOutVal${i}">0</span></div>`).join("");
+ let selBtns=""; for(let i=0;i<width;i++) selBtns+=`<button class="bitbtn" data-role="x-sel" data-idx="${i}">0</button>`;
+ shell(cfg.title,"Toggle the single data bit, then move the select code — only one destination ever receives it.",
+  `<div class="line-row"><span class="label">Data D</span><button class="swtoggle on" data-role="x-data"></button></div>
+   <div class="switches">${selBtns}</div>
+   <div class="stage-grid">${grid}</div>
+   <div class="callout x" id="stageExplain"></div>`);
+ updateStageDemux();
+}
+function updateStageDemux(){
+ const {cfg,width,data,select}=stageState;
+ $$("#analogyStage [data-role='x-sel']").forEach((b,i)=>{b.textContent=select[i];b.classList.toggle("on",!!select[i]);});
+ const dataBtn=$("#analogyStage [data-role='x-data']"); if(dataBtn) dataBtn.classList.toggle("on",!!data);
+ const code=select.join(""); const value=parseInt(code,2);
+ cfg.items.forEach((it,i)=>{
+  const el=$("#stageOut"+i), val=$("#stageOutVal"+i);
+  const active=(i===value);
+  if(el){ el.classList.toggle("active",active); el.classList.add("demux"); }
+  if(val) val.textContent = active ? data : 0;
+ });
+ $("#stageExplain").innerHTML=`<b>Select ${code} routes D to ${cfg.items[value].icon} ${cfg.items[value].label}.</b> It now shows <b>${data}</b> — every other destination stays at 0.`;
+}
+function handleStageDemuxData(){ stageState.data^=1; updateStageDemux(); }
+function handleStageDemuxSel(idx){ stageState.select[idx]^=1; updateStageDemux(); }
+
+stageEl.addEventListener("click",e=>{
+ const t=e.target.closest("[data-role]"); if(!t) return;
+ const role=t.dataset.role;
+ if(role==="m-data") handleStageMuxData(+t.dataset.idx);
+ else if(role==="m-sel") handleStageMuxSel(+t.dataset.idx);
+ else if(role==="x-data") handleStageDemuxData();
+ else if(role==="x-sel") handleStageDemuxSel(+t.dataset.idx);
+});
+
+$$(".analogy-card").forEach(c=>c.addEventListener("click",()=>{
+ $$(".analogy-card").forEach(x=>x.classList.remove("selected"));c.classList.add("selected");
+ const a=analogy[c.dataset.a];
+ const box=$("#analogyText"); box.className="callout "+a.cls; box.innerHTML=a.html;
+ renderStage(c.dataset.a);
+}));
+renderStage("basicMux");
+
+/* ---------- 4-to-1 MUX lab ---------- */
+const muxLines=$("#muxLines");
+const muxLineIcons=["I0","I1","I2","I3"];
+const muxData=[1,0,1,1];
+muxLineIcons.forEach((lbl,i)=>{
+ const row=document.createElement("div"); row.className="line-row"; row.id="muxRow"+i;
+ row.innerHTML=`<span class="label">${lbl}</span><button class="swtoggle ${muxData[i]?'on':''}" data-i="${i}"></button>`;
+ muxLines.appendChild(row);
+});
+let mS1=0,mS0=0;
+function updateMux(){
+ $$("#muxLines .swtoggle").forEach((b,i)=>{ b.classList.toggle("on",!!muxData[i]); });
+ $("#mS1").textContent=mS1;$("#mS0").textContent=mS0;
+ $("#mS1").classList.toggle("on",!!mS1);$("#mS0").classList.toggle("on",!!mS0);
+ const v=mS1*2+mS0;
+ $$("#muxLines .line-row").forEach((r,i)=>r.classList.toggle("selected",i===v));
+ $("#muxY").textContent=muxData[v];
+ $("#muxResult").innerHTML="<b>Select "+mS1+""+mS0+" → Line I"+v+" connected.</b><br>Y = <span class=\"bits\">"+muxData[v]+"</span>";
+ $$("#muxTable tr").forEach((tr,i)=>tr.classList.toggle("hl", i===v));
+}
+muxLines.addEventListener("click",e=>{
+ const b=e.target.closest(".swtoggle"); if(!b) return;
+ const i=+b.dataset.i; muxData[i]^=1; updateMux();
+});
+$("#mS1").addEventListener("click",()=>{mS1^=1;updateMux();});
+$("#mS0").addEventListener("click",()=>{mS0^=1;updateMux();});
+updateMux();
+
+/* ---------- 8-to-1 sensor bus ---------- */
+const sensorBank=$("#muxSensorBank");
+const sensorReadings=[22,24,19,27,31,18,25,29];
+for(let i=0;i<8;i++){
+ const d=document.createElement("div"); d.className="memcell"; d.id="sens"+i;
+ d.innerHTML="🌡️<br>S"+i+"<br>"+sensorReadings[i]+"°"; sensorBank.appendChild(d);
+}
+function updateMuxAddr(v){
+ const bits=v.toString(2).padStart(3,"0");
+ $("#muxAddrBits").textContent=bits; $("#muxAddrDec").textContent=v;
+ for(let i=0;i<8;i++) $("#sens"+i).classList.toggle("active", i===v);
+}
+$("#muxAddrSlider").addEventListener("input",e=>updateMuxAddr(+e.target.value));
+updateMuxAddr(0);
+
+/* ---------- 1-to-4 DEMUX lab ---------- */
+let xData=1, xS1=0, xS0=0;
+function updateDemux(){
+ $("#demuxDataToggle").classList.toggle("on",!!xData);
+ $("#xS1").textContent=xS1;$("#xS0").textContent=xS0;
+ $("#xS1").classList.toggle("on",!!xS1);$("#xS0").classList.toggle("on",!!xS0);
+ const v=xS1*2+xS0;
+ for(let i=0;i<4;i++){
+  const active = i===v;
+  $("#xo"+i).classList.toggle("active",active);
+  $("#xo"+i+"v").textContent = active ? xData : 0;
+ }
+ $("#xExplain").innerHTML="Select "+xS1+""+xS0+" routes D to Y"+v+" — it now shows <b>"+xData+"</b>, all other outputs stay 0.";
+ $$("#xTable tr").forEach((tr,i)=>tr.classList.toggle("hl", i===v));
+}
+$("#demuxDataToggle").addEventListener("click",()=>{xData^=1;updateDemux();});
+$("#xS1").addEventListener("click",()=>{xS1^=1;updateDemux();});
+$("#xS0").addEventListener("click",()=>{xS0^=1;updateDemux();});
+updateDemux();
+
+/* ---------- 1-to-8 mail sorter ---------- */
+const mailBank=$("#mailBank");
+for(let i=0;i<8;i++){
+ const d=document.createElement("div"); d.className="memcell"; d.id="bin"+i;
+ d.innerHTML="📭<br>Bin "+i; mailBank.appendChild(d);
+}
+let mailData=1;
+function updateMail(v){
+ const bits=v.toString(2).padStart(3,"0");
+ $("#mailBits").textContent=bits; $("#mailDec").textContent=v;
+ for(let i=0;i<8;i++){
+  const cell=$("#bin"+i); const active=(i===v);
+  cell.classList.toggle("active",active);
+  cell.innerHTML = (active && mailData) ? "📬<br>Bin "+i : "📭<br>Bin "+i;
+ }
+}
+$("#mailDataToggle").addEventListener("click",()=>{
+ mailData^=1; $("#mailDataToggle").classList.toggle("on",!!mailData);
+ updateMail(+$("#mailSlider").value);
+});
+$("#mailSlider").addEventListener("input",e=>updateMail(+e.target.value));
+$("#mailDataToggle").classList.add("on");
+updateMail(0);
+
+/* ---------- applications ---------- */
+const appDetails={
+ channel:"<b>Channel Selector:</b> Analogy — a tuner dials in one broadcast among many. Circuit role — a multiplexer connects one selected feed to the display.",
+ sensor:"<b>Shared Sensor Bus:</b> Analogy — many sensors share one converter, chosen by address. Circuit role — a multiplexer selects one analog/digital line at a time.",
+ studio:"<b>Video Switcher:</b> Analogy — a director cuts between cameras. Circuit role — a multiplexer routes exactly one camera's signal to the broadcast line.",
+ train:"<b>Railway Junction:</b> Analogy — a switch operator lets one train through. Circuit role — a multiplexer allows one input line onto the shared path.",
+ mail:"<b>Mail Sorting:</b> Analogy — a sorter reads a zip code and drops a letter into one bin. Circuit role — a demultiplexer routes one input to one selected output.",
+ switchboard:"<b>Telephone Switchboard:</b> Analogy — one call is connected to one dialed extension. Circuit role — a demultiplexer distributes a single line to many possible destinations.",
+ irrigation:"<b>Irrigation Manifold:</b> Analogy — one valve opens to water one zone. Circuit role — a demultiplexer sends the single water source to exactly one output.",
+ baggage:"<b>Baggage Sorter:</b> Analogy — a scanned flight code sends a bag down one chute. Circuit role — a demultiplexer directs one input to one of several outputs."
+};
+$$(".app-card").forEach(c=>c.addEventListener("click",()=>{
+ $$(".app-card").forEach(x=>x.style.borderColor="");
+ c.style.borderColor= c.dataset.jump==="mux" ? "var(--mux)" : "var(--demux)";
+ $("#appDetail").innerHTML=appDetails[c.dataset.app];
+}));
+$$(".app-card .jumplink").forEach(link=>link.addEventListener("click",(e)=>{
+ e.stopPropagation();
+ const card=link.closest(".app-card");
+ activatePanel(card.dataset.jump); window.scrollTo({top:0,behavior:"smooth"});
+}));
+
+/* ---------- quiz ---------- */
+const questions=[
+ {q:"Which circuit selects one of many data inputs to route to a single output?", opts:{a:"Multiplexer",b:"Demultiplexer",c:"Encoder",d:"Flip-flop"}, correct:"a", why:"A Multiplexer (MUX) connects one of several data inputs to a single output based on the select lines."},
+ {q:"A 4-to-1 multiplexer needs how many select lines?", opts:{a:"1",b:"2",c:"4",d:"8"}, correct:"b", why:"n select lines choose among 2ⁿ inputs, so 4 inputs need 2 select lines."},
+ {q:"Which circuit takes one input and routes it to one of many outputs?", opts:{a:"Multiplexer",b:"Decoder",c:"Demultiplexer",d:"Register"}, correct:"c", why:"A Demultiplexer (DEMUX) takes a single data input and sends it to exactly one of many outputs, chosen by the select code."},
+ {q:"An 8-output demultiplexer needs how many select lines?", opts:{a:"2",b:"3",c:"4",d:"8"}, correct:"b", why:"2ⁿ outputs need n select lines, so 8 outputs need 3 select lines (2³ = 8)."},
+ {q:"Which best sums up how MUX and DEMUX relate?", opts:{a:"They are unrelated circuits",b:"MUX combines many signals onto one path; DEMUX splits that one path back out",c:"Both circuits only ever produce a single fixed output",d:"MUX stores data; DEMUX deletes data"}, correct:"b", why:"A multiplexer funnels many signals onto a shared line, and a demultiplexer on the far end fans that single line back out to the right destination — mirror images of each other."}
+];
+let qi=0, score=0, answered=false;
+function renderProgress(){
+ const wrap=$("#quizProgress"); wrap.innerHTML="";
+ questions.forEach((_,i)=>{ const s=document.createElement("span");
+  s.className = i<qi ? "done" : (i===qi ? "current" : ""); wrap.appendChild(s); });
+}
+function renderQuestion(){
+ answered=false;
+ const item=questions[qi];
+ $("#quizQ").textContent=item.q;
+ const optsWrap=$("#quizOptions"); optsWrap.innerHTML="";
+ const letters=["a","b","c","d"];
+ letters.forEach(L=>{
+  const btn=document.createElement("button"); btn.className="quiz-btn"; btn.dataset.answer=L;
+  btn.textContent=L.toUpperCase()+". "+item.opts[L];
+  btn.addEventListener("click",()=>handleAnswer(btn));
+  optsWrap.appendChild(btn);
+ });
+ $("#quizResult").textContent="Choose an answer.";
+ $("#quizNext").style.display="none";
+ $("#quizScore").textContent=score+" / "+qi;
+ renderProgress();
+}
+function handleAnswer(btn){
+ if(answered) return; answered=true;
+ const item=questions[qi];
+ $$(".quiz-btn").forEach(b=>{
+  if(b.dataset.answer===item.correct) b.classList.add("correct");
+  else if(b===btn) b.classList.add("wrong");
+ });
+ const correct = btn.dataset.answer===item.correct;
+ if(correct) score++;
+ $("#quizResult").innerHTML = (correct? "✅ Correct! " : "❌ Not quite. ") + item.why;
+ $("#quizScore").textContent=score+" / "+(qi+1);
+ if(qi<questions.length-1){ $("#quizNext").style.display="inline-block"; }
+ else { $("#quizNext").style.display="none"; $("#quizResult").innerHTML+=" <br><b>Quiz complete — final score "+score+" / "+questions.length+".</b>"; }
+}
+$("#quizNext").addEventListener("click",()=>{ qi++; renderQuestion(); });
+renderQuestion();
+</script>
+</body>
+</html>
